@@ -1,0 +1,10 @@
+﻿# Java
+*.class
+
+# Gradle
+.gradle
+build/
+
+#IntelliJ IDEA
+.idea/shelf/
+.idea/workspace.xml

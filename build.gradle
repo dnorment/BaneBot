@@ -1,0 +1,19 @@
+plugins {
+    id 'java'
+}
+
+group 'gg.norment'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+    jcenter()
+}
+
+dependencies {
+    implementation 'net.dv8tion:JDA:4.2.0_183'
+    implementation 'com.google.cloud:google-cloud-speech:1.22.6'
+    implementation 'com.google.cloud:google-cloud-texttospeech:1.0.2'
+    implementation 'com.github.wdavies973:VocalCord:2.3'
+}
