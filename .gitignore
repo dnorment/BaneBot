@@ -8,3 +8,4 @@ build/
 #IntelliJ IDEA
 .idea/shelf/
 .idea/workspace.xml
+.idea/uiDesigner.xml
