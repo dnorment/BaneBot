@@ -9,6 +9,10 @@ public class ConnectFourBoard {
 
     private final Emoji[][] board = new Emoji[6][7]; //6 rows, 7 columns
 
+    public ConnectFourBoard() {
+        clearBoard();
+    }
+
     public void clearBoard() {
         for (int row = 0; row < board.length; row++) {
             for (int col = 0; col < board[0].length; col++) {

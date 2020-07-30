@@ -38,13 +38,19 @@ public class ConnectFourCommand extends Command{
         } else {
             //get users and create game then add to active games
             User firstUser = event.getAuthor();
+            //check that user argument is a mentioned user
+            if (event.getMessage().getMentionedUsers().size() < 1) {
+                Command.showUsage(event, this, true);
+                return;
+            }
             User secondUser = event.getMessage().getMentionedUsers().get(0);
             ConnectFourGame game = new ConnectFourGame(firstUser, secondUser);
             GameHandler.addGame(game);
 
             //create game embed
-            embed.setTitle("Connect 4")
+            embed.setTitle(String.format("Connect 4%n%s vs. %s", firstUser.getName(), secondUser.getName()))
                     .setColor(Command.YELLOW)
+                    .setDescription(game.getBoard().toString())
                     .setFooter(String.format("Game: Connect 4 (#%d)", game.hashCode()));
         }
 
@@ -52,7 +58,7 @@ public class ConnectFourCommand extends Command{
 
         //add the numbers 1-7 as emotes on the message
         for (int i=1; i<=7; i++) {
-            gameMessage.addReaction(String.format("U+3%dU+fe0fU+20e3", i)).complete();
+            gameMessage.addReaction(String.format("U+3%dU+fe0fU+20e3", i)).queue();
         }
     }
 }

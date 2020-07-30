@@ -27,8 +27,7 @@ public class ConnectFourGame extends ReactionGame {
             //TODO parse user action
         } else {
             //remove non-active player reactions
-            event.getReaction().removeReaction().complete();
-            //TODO remove user reaction, not bot reaction
+            event.getReaction().removeReaction(event.getUser()).complete();
         }
         updateEmbed(event);
     }
@@ -38,6 +37,10 @@ public class ConnectFourGame extends ReactionGame {
         Message message = event.getChannel().retrieveMessageById(messageId).complete();
         MessageEmbed embed = message.getEmbeds().get(0);
         //TODO update the embed
+    }
+
+    public ConnectFourBoard getBoard() {
+        return board;
     }
 
     @Override
