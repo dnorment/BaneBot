@@ -2,9 +2,9 @@ package norment.banebot.game.connectfour;
 
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
-import norment.banebot.game.Game;
+import norment.banebot.game.ReactionGame;
 
-public class ConnectFourGame extends Game {
+public class ConnectFourGame extends ReactionGame {
     private final ConnectFourBoard board = new ConnectFourBoard();
     private final User[] users = new User[2];
     private User userTurn;

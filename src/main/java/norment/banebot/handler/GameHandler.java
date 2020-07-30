@@ -1,6 +1,7 @@
 package norment.banebot.handler;
 
 import norment.banebot.game.Game;
+import norment.banebot.game.ReactionGame;
 
 import java.util.HashMap;
 
@@ -17,6 +18,13 @@ public class GameHandler {
 
     public static Game getGame(int id) {
         return games.get(id);
+    }
+
+    public static ReactionGame getReactionGame(int id) {
+        if (games.get(id) instanceof ReactionGame) {
+            return (ReactionGame) games.get(id);
+        }
+        return null;
     }
 
 }
