@@ -17,10 +17,9 @@ public class ReactionHandler {
         if (hasFooterText) {
             String footerText = embed.getFooter().getText();
             if (footerText.startsWith("Game: ")) {
-                String gameId = footerText.split("\\(")[1].replaceAll("\\)", "");
+                String gameId = footerText.split("\\(#")[1].replaceAll("\\)", "");
                 ReactionGame game = GameHandler.getReactionGame(Integer.parseInt(gameId));
-                assert game != null;
-                game.handleReaction(event);
+                if (game != null) game.handleReaction(event);
             }
         }
 

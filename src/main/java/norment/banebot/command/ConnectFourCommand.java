@@ -1,8 +1,12 @@
 package norment.banebot.command;
 
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import norment.banebot.game.connectfour.ConnectFourGame;
+import norment.banebot.handler.GameHandler;
 
 public class ConnectFourCommand extends Command{
     @Override
@@ -32,7 +36,23 @@ public class ConnectFourCommand extends Command{
             Command.showUsage(event, this, true);
             return;
         } else {
-            //TODO create game
+            //get users and create game then add to active games
+            User firstUser = event.getAuthor();
+            User secondUser = event.getMessage().getMentionedUsers().get(0);
+            ConnectFourGame game = new ConnectFourGame(firstUser, secondUser);
+            GameHandler.addGame(game);
+
+            //create game embed
+            embed.setTitle("Connect 4")
+                    .setColor(Command.YELLOW)
+                    .setFooter(String.format("Game: Connect 4 (#%d)", game.hashCode()));
+        }
+
+        Message gameMessage = channel.sendMessage(embed.build()).complete();
+
+        //add the numbers 1-7 as emotes on the message
+        for (int i=1; i<=7; i++) {
+            gameMessage.addReaction(String.format("U+3%dU+fe0fU+20e3", i)).complete();
         }
     }
 }
