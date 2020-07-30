@@ -1,13 +1,11 @@
 package norment.banebot.main;
 
-import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import norment.banebot.command.Command;
 import org.reflections.Reflections;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Set;
 
@@ -40,14 +38,17 @@ public class CommandHandler {
 
     public static void handleCommand(GuildMessageReceivedEvent event) {
         //Split command into args
-        Message message = event.getMessage();
-        String[] words = message.getContentRaw().split("\\s+"); //split by spaces
-        String command = words[0].replace(BaneBot.prefix, "");
+        String[] args = event.getMessage().getContentRaw().split("\\s+"); //split by spaces
+        String command = args[0].replace(BaneBot.prefix, "");
 
         //Check if command exists
         if (commands.containsKey(command)) {
             //Execute command
             commands.get(command).run(event);
         }
+    }
+
+    public static Command[] getCommands() {
+        return commands.values().toArray(new Command[0]);
     }
 }

@@ -17,7 +17,7 @@ public class PingCommand extends Command {
     @Override
     public String[] getUsage() {
         return new String[]{
-                "ping::ping the bot"
+                "ping::Ping the bot"
         };
     }
 
