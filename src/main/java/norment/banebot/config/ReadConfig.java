@@ -1,4 +1,4 @@
-package norment.banebot;
+package norment.banebot.config;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -8,7 +8,7 @@ public class ReadConfig {
 
     public Properties properties;
 
-    ReadConfig() {
+    public ReadConfig() {
         properties = new Properties();
         try {
             //Load properties from file

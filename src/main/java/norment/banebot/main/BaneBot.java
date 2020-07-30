@@ -1,13 +1,16 @@
-package norment.banebot;
+package norment.banebot.main;
 
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.cache.CacheFlag;
+
+import norment.banebot.config.ReadConfig;
 
 import javax.security.auth.login.LoginException;
 
-public class Bane {
+public class BaneBot {
 
     public static String prefix;
 
@@ -25,6 +28,10 @@ public class Bane {
                 GatewayIntent.GUILD_MESSAGES,
                 GatewayIntent.GUILD_MESSAGE_REACTIONS,
                 GatewayIntent.GUILD_VOICE_STATES
+        ).disableCache(
+                CacheFlag.ACTIVITY,
+                CacheFlag.EMOTE,
+                CacheFlag.CLIENT_STATUS
         );
 
         //Set visible bot status
@@ -32,7 +39,7 @@ public class Bane {
                 .setActivity(Activity.watching("the fire rise"));
 
         //Listen for events and handle
-        builder.addEventListeners(new Commands());
+        builder.addEventListeners(new EventRouter());
 
         //Launch
         builder.build();
