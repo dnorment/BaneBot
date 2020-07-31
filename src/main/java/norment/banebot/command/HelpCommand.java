@@ -3,9 +3,7 @@ package norment.banebot.command;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
-import norment.banebot.main.CommandHandler;
-
-import java.awt.*;
+import norment.banebot.handler.CommandHandler;
 
 public class HelpCommand extends Command {
     @Override
@@ -22,7 +20,7 @@ public class HelpCommand extends Command {
     public String[] getUsage() {
         return new String[]{
                 "help::List possible commands",
-                "help `<command>`::Show description and usage of a command"
+                "help `<command>`::Show description and usage of `command`"
         };
     }
 

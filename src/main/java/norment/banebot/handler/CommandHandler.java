@@ -1,7 +1,8 @@
-package norment.banebot.main;
+package norment.banebot.handler;
 
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import norment.banebot.command.Command;
+import norment.banebot.main.BaneBot;
 import org.reflections.Reflections;
 
 import java.lang.reflect.InvocationTargetException;
