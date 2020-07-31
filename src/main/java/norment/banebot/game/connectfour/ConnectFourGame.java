@@ -1,7 +1,6 @@
 package norment.banebot.game.connectfour;
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.Activity.Emoji;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.MessageReaction;
@@ -37,7 +36,10 @@ public class ConnectFourGame extends ReactionGame {
                 board.place(color, column);
                 turn++;
             }
-            //TODO check wincond
+
+            if (board.hasWon(color)) {
+                //TODO end game
+            }
         } else {
             //remove non-active player reactions
             event.getReaction().removeReaction(event.getUser()).complete();
