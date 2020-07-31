@@ -46,6 +46,20 @@ public class ConnectFourBoard {
 
     @Override
     public String toString() {
-        return ""; //TODO board to string for embed
+        StringBuilder sb = new StringBuilder();
+        for (int row = 0; row < board.length; row++) {
+            for (int col = 0; col < board[0].length; col++) {
+                if (board[row][col] == redCircle) {
+                    sb.append("\uD83D\uDD34");
+                } else if (board[row][col] == blueCircle) {
+                    sb.append("\uD83D\uDD35");
+                } else {
+                    sb.append("\u2B24");
+
+                }
+            }
+            sb.append("\n");
+        }
+        return sb.toString();
     }
 }
