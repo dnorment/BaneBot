@@ -31,11 +31,11 @@ public class ConnectFourGame extends ReactionGame {
             event.getReaction().removeReaction(event.getUser()).complete();
             //ignore non-existing number reactions
             if (column < 0 || column > 6) return;
-            turn++;
 
             //check valid move, then do placement
             if (board.canPlace(column)) {
                 board.place(color, column);
+                turn++;
             }
             //TODO check wincond
         } else {
@@ -51,7 +51,7 @@ public class ConnectFourGame extends ReactionGame {
         MessageReaction reaction = event.getReaction();
 
         int column = -1;
-        for (int i=0; i<reactions.size(); i++) {
+        for (int i = 0; i < reactions.size(); i++) {
             if (reaction.getReactionEmote().equals(reactions.get(i).getReactionEmote())) {
                 column = i;
             }

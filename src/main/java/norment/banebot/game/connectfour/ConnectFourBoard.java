@@ -32,7 +32,7 @@ public class ConnectFourBoard {
     public void place(String color, int col) {
         Emoji colorCircle = getColorCircle(color);
         for (int row = 0; row <= 6; row++) {
-            if (board[row][col] == noCircle) {
+            if (board[row][col].equals(noCircle)) {
                 board[row][col] = colorCircle;
                 return;
             }
@@ -47,11 +47,13 @@ public class ConnectFourBoard {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
+
+        //create string from board with unicode circles
         for (int row = board.length-1; row >= 0; row--) {
             for (int col = 0; col < board[0].length; col++) {
-                if (board[row][col] == redCircle) {
+                if (board[row][col].equals(redCircle)) {
                     sb.append("\uD83D\uDD34");
-                } else if (board[row][col] == blueCircle) {
+                } else if (board[row][col].equals(blueCircle)) {
                     sb.append("\uD83D\uDD35");
                 } else {
                     sb.append("\u26AB");
@@ -60,6 +62,12 @@ public class ConnectFourBoard {
             }
             sb.append("\n");
         }
+        //append 1-7 below grid
+        for (int i = 1; i <= 7; i++) {
+            sb.append(i).append("\uFE0F\u20E3");
+        }
+
         return sb.toString();
+
     }
 }

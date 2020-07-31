@@ -8,7 +8,7 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import norment.banebot.game.connectfour.ConnectFourGame;
 import norment.banebot.handler.GameHandler;
 
-public class ConnectFourCommand extends Command{
+public class ConnectFourCommand extends Command {
     @Override
     public String getCommand() {
         return "connect4";
@@ -57,7 +57,7 @@ public class ConnectFourCommand extends Command{
         Message gameMessage = channel.sendMessage(embed.build()).complete();
 
         //add the numbers 1-7 as emotes on the message
-        for (int i=1; i<=7; i++) {
+        for (int i = 1; i <= 7; i++) {
             gameMessage.addReaction(String.format("U+3%dU+fe0fU+20e3", i)).queue();
         }
     }
