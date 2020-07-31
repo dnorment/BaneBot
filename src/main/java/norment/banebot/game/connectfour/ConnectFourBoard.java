@@ -22,7 +22,7 @@ public class ConnectFourBoard {
     }
 
     public boolean canPlace(int col) {
-        return board[6][col] == noCircle;
+        return board[5][col].equals(noCircle);
     }
 
     public Emoji getColorCircle(String color) {
@@ -47,14 +47,14 @@ public class ConnectFourBoard {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (int row = 0; row < board.length; row++) {
+        for (int row = board.length-1; row >= 0; row--) {
             for (int col = 0; col < board[0].length; col++) {
                 if (board[row][col] == redCircle) {
                     sb.append("\uD83D\uDD34");
                 } else if (board[row][col] == blueCircle) {
                     sb.append("\uD83D\uDD35");
                 } else {
-                    sb.append("\u2B24");
+                    sb.append("\u26AB");
 
                 }
             }

@@ -38,8 +38,8 @@ public class ConnectFourCommand extends Command{
         } else {
             //get users and create game then add to active games
             User firstUser = event.getAuthor();
-            //check that user argument is a mentioned user
-            if (event.getMessage().getMentionedUsers().size() < 1) {
+            //check that user argument is a mentioned user (not bot)
+            if (event.getMessage().getMentionedUsers().size() < 1 || event.getMessage().getMentionedUsers().get(0).isBot()) {
                 Command.showUsage(event, this, true);
                 return;
             }

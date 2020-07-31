@@ -1,11 +1,15 @@
 package norment.banebot.game.connectfour;
 
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Activity.Emoji;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.MessageReaction;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
 import norment.banebot.game.ReactionGame;
+
+import java.util.List;
 
 public class ConnectFourGame extends ReactionGame {
     private final ConnectFourBoard board = new ConnectFourBoard();
@@ -20,11 +24,20 @@ public class ConnectFourGame extends ReactionGame {
     public void handleReaction(GuildMessageReactionAddEvent event) {
         //Check if the reaction is from the active turn's user
         User user = event.getUser();
-        if (user == users[turn%2]) {
-            //get circle emoji of current player
-            Emoji colorCircle = board.getColorCircle(user == users[0] ? "red" : "blue");
+        if (user.equals(users[turn % 2])) {
+            //get color and column choice of current player, update turn #
+            String color = user.equals(users[0]) ? "red" : "blue";
+            int column = getColumnFromReaction(event);
+            event.getReaction().removeReaction(event.getUser()).complete();
+            //ignore non-existing number reactions
+            if (column < 0 || column > 6) return;
+            turn++;
 
-            //TODO parse user action
+            //check valid move, then do placement
+            if (board.canPlace(column)) {
+                board.place(color, column);
+            }
+            //TODO check wincond
         } else {
             //remove non-active player reactions
             event.getReaction().removeReaction(event.getUser()).complete();
@@ -32,11 +45,37 @@ public class ConnectFourGame extends ReactionGame {
         updateEmbed(event);
     }
 
-    public void updateEmbed(GuildMessageReactionAddEvent event) {
+    private int getColumnFromReaction(GuildMessageReactionAddEvent event) {
+        Message message = event.getChannel().retrieveMessageById(event.getMessageId()).complete();
+        List<MessageReaction> reactions = message.getReactions();
+        MessageReaction reaction = event.getReaction();
+
+        int column = -1;
+        for (int i=0; i<reactions.size(); i++) {
+            if (reaction.getReactionEmote().equals(reactions.get(i).getReactionEmote())) {
+                column = i;
+            }
+        }
+        return column;
+    }
+
+    private void updateEmbed(GuildMessageReactionAddEvent event) {
         String messageId = event.getMessageId();
         Message message = event.getChannel().retrieveMessageById(messageId).complete();
-        MessageEmbed embed = message.getEmbeds().get(0);
-        //TODO update the embed
+        MessageEmbed oldEmbed = message.getEmbeds().get(0);
+
+        EmbedBuilder embed = new EmbedBuilder();
+        //copy title and footer to new embed
+        embed.setTitle(oldEmbed.getTitle())
+                .setColor(oldEmbed.getColor());
+        if (oldEmbed.getFooter() == null) return;
+        embed.setFooter(oldEmbed.getFooter().getText());
+
+        //update board state
+        embed.setDescription(board.toString());
+
+        //edit message to reflect update
+        message.editMessage(embed.build()).queue();
     }
 
     public ConnectFourBoard getBoard() {
