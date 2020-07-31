@@ -49,7 +49,7 @@ public class ConnectFourCommand extends Command {
 
             //create game embed
             embed.setTitle(String.format("Connect 4%n%s vs. %s", firstUser.getName(), secondUser.getName()))
-                    .setColor(Command.YELLOW)
+                    .setColor(ConnectFourGame.RED_CIRCLE)
                     .setDescription(game.getBoard().toString())
                     .setFooter(String.format("Game: Connect 4 (#%d)", game.hashCode()));
         }

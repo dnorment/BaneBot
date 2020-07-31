@@ -7,10 +7,14 @@ import net.dv8tion.jda.api.entities.MessageReaction;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
 import norment.banebot.game.ReactionGame;
+import norment.banebot.handler.GameHandler;
 
+import java.awt.Color;
 import java.util.List;
 
 public class ConnectFourGame extends ReactionGame {
+    public static final Color RED_CIRCLE = new Color(221, 46, 68);
+    public static final Color BLUE_CIRCLE = new Color(85, 172, 238);
     private final ConnectFourBoard board = new ConnectFourBoard();
     private final User[] users = new User[2];
     private int turn = 0;
@@ -34,17 +38,23 @@ public class ConnectFourGame extends ReactionGame {
             //check valid move, then do placement
             if (board.canPlace(column)) {
                 board.place(color, column);
-                turn++;
+                //check player has won, if so end game and remove from active games
+                if (board.hasWon(color)) {
+                    //clear reactions and remove
+                    updateEmbed(event);
+                    event.getChannel().retrieveMessageById(event.getMessageId()).complete().clearReactions().queue();
+                    GameHandler.removeGame(this);
+                } else {
+                    //move to next turn and update
+                    turn++;
+                    updateEmbed(event);
+                }
             }
 
-            if (board.hasWon(color)) {
-                //TODO end game
-            }
         } else {
             //remove non-active player reactions
             event.getReaction().removeReaction(event.getUser()).complete();
         }
-        updateEmbed(event);
     }
 
     private int getColumnFromReaction(GuildMessageReactionAddEvent event) {
@@ -65,13 +75,15 @@ public class ConnectFourGame extends ReactionGame {
         String messageId = event.getMessageId();
         Message message = event.getChannel().retrieveMessageById(messageId).complete();
         MessageEmbed oldEmbed = message.getEmbeds().get(0);
-
         EmbedBuilder embed = new EmbedBuilder();
+        
         //copy title and footer to new embed
-        embed.setTitle(oldEmbed.getTitle())
-                .setColor(oldEmbed.getColor());
+        embed.setTitle(oldEmbed.getTitle());
         if (oldEmbed.getFooter() == null) return;
         embed.setFooter(oldEmbed.getFooter().getText());
+
+        //update color to current player
+        embed.setColor((turn % 2) == 0 ? RED_CIRCLE : BLUE_CIRCLE);
 
         //update board state
         embed.setDescription(board.toString());
