@@ -1,17 +1,18 @@
 package norment.banebot.main;
 
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import norment.banebot.handler.CommandHandler;
+import norment.banebot.handler.DatabaseHandler;
 import norment.banebot.handler.ReactionHandler;
 
 public class EventRouter extends ListenerAdapter {
 
     public EventRouter() {
         CommandHandler.init();
+        DatabaseHandler.init();
     }
 
     @Override
