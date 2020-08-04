@@ -49,8 +49,8 @@ public class ConnectFourGame extends ReactionGame {
 
                     //handle game win
                     User loser = users[0].equals(user) ? users[1] : users[0];
-                    channel.sendMessage("Winner: " + user.getAsMention() + ", Loser: " + loser.getAsMention()).queue();
                     WinEvent winEvent = new WinEvent("connect4", guild, user, loser);
+                    channel.sendMessage(winEvent.toString()).queue();
                     ScoreHandler.handleScore(winEvent);
                 } else {
                     //move to next turn and update

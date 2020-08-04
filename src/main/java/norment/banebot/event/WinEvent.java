@@ -31,4 +31,9 @@ public class WinEvent {
     public User getLoser() {
         return loser;
     }
+
+    @Override
+    public String toString() {
+        return "Winner: " + winner.getAsMention() + ", Loser: " + loser.getAsMention();
+    }
 }
