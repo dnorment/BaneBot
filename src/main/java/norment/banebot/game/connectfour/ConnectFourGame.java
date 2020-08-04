@@ -1,15 +1,14 @@
 package norment.banebot.game.connectfour;
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.MessageReaction;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
+import norment.banebot.event.WinEvent;
 import norment.banebot.game.ReactionGame;
 import norment.banebot.handler.GameHandler;
+import norment.banebot.handler.ScoreHandler;
 
-import java.awt.Color;
+import java.awt.*;
 import java.util.List;
 
 public class ConnectFourGame extends ReactionGame {
@@ -25,13 +24,16 @@ public class ConnectFourGame extends ReactionGame {
     }
 
     public void handleReaction(GuildMessageReactionAddEvent event) {
-        //Check if the reaction is from the active turn's user
         User user = event.getUser();
+        Guild guild = event.getGuild();
+        MessageReaction reaction = event.getReaction();
+        TextChannel channel = event.getChannel();
+        //Check if the reaction is from the active turn's user
         if (user.equals(users[turn % 2])) {
             //get color and column choice of current player, update turn #
             String color = user.equals(users[0]) ? "red" : "blue";
             int column = getColumnFromReaction(event);
-            event.getReaction().removeReaction(event.getUser()).complete();
+            reaction.removeReaction(user).complete();
             //ignore non-existing number reactions
             if (column < 0 || column > 6) return;
 
@@ -42,8 +44,14 @@ public class ConnectFourGame extends ReactionGame {
                 if (board.hasWon(color)) {
                     //clear reactions and remove
                     updateEmbed(event);
-                    event.getChannel().retrieveMessageById(event.getMessageId()).complete().clearReactions().queue();
+                    channel.retrieveMessageById(event.getMessageId()).complete().clearReactions().queue();
                     GameHandler.removeGame(this);
+
+                    //handle game win
+                    User loser = users[0].equals(user) ? users[1] : users[0];
+                    WinEvent winEvent = new WinEvent("connect4", guild, user, loser);
+                    channel.sendMessage(winEvent.toString()).queue();
+                    ScoreHandler.handleScore(winEvent);
                 } else {
                     //move to next turn and update
                     turn++;
