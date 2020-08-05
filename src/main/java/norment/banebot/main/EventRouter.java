@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEve
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import norment.banebot.handler.CommandHandler;
 import norment.banebot.handler.DatabaseHandler;
+import norment.banebot.handler.KarmaHandler;
 import norment.banebot.handler.ReactionHandler;
 
 public class EventRouter extends ListenerAdapter {
@@ -13,6 +14,7 @@ public class EventRouter extends ListenerAdapter {
     public EventRouter() {
         CommandHandler.init();
         DatabaseHandler.init();
+        KarmaHandler.init();
     }
 
     @Override
@@ -31,12 +33,7 @@ public class EventRouter extends ListenerAdapter {
         //Ignore bot reactions
         if (event.getUser().isBot()) return;
 
-        //Check if reacting to an embed message from this bot and pass to ReactionHandler
-        String messageId = event.getMessageId();
-        Message message = event.getChannel().retrieveMessageById(messageId).complete();
-
-        if (!message.getEmbeds().isEmpty() && message.getAuthor() == event.getJDA().getSelfUser()) {
-            ReactionHandler.handleReaction(event);
-        }
+        //Pass non-bot reactions to reaction handler
+        ReactionHandler.handleReaction(event);
     }
 }
