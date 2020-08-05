@@ -96,6 +96,13 @@ public class ConnectFourBoard {
         return false;
     }
 
+    public boolean isFull() {
+        for (int i = 0; i < COLS; i++) {
+            if (canPlace(i)) return false;
+        }
+        return true;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

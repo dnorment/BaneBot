@@ -3,6 +3,7 @@ package norment.banebot.game.connectfour;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
+import norment.banebot.command.Command;
 import norment.banebot.event.WinEvent;
 import norment.banebot.game.ReactionGame;
 import norment.banebot.handler.GameHandler;
@@ -40,10 +41,11 @@ public class ConnectFourGame extends ReactionGame {
             //check valid move, then do placement
             if (board.canPlace(column)) {
                 board.place(color, column);
-                //check player has won, if so end game and remove from active games
+                //check player has won or there is a draw, if so end game and remove from active games
                 if (board.hasWon(color)) {
                     //clear reactions and remove
-                    updateEmbed(event);
+                    Color userColor = (turn % 2) == 0 ? RED_CIRCLE : BLUE_CIRCLE;
+                    updateEmbed(event, userColor);
                     channel.retrieveMessageById(event.getMessageId()).complete().clearReactions().queue();
                     GameHandler.removeGame(this);
 
@@ -52,10 +54,16 @@ public class ConnectFourGame extends ReactionGame {
                     WinEvent winEvent = new WinEvent("connect4", guild, user, loser);
                     channel.sendMessage(winEvent.toString()).queue();
                     ScoreHandler.handleScore(winEvent);
+                } else if (board.isFull()) {
+                    //board is full, remove game and don't return a winner
+                    updateEmbed(event, Command.YELLOW);
+                    channel.retrieveMessageById(event.getMessageId()).complete().clearReactions().queue();
+                    GameHandler.removeGame(this);
                 } else {
                     //move to next turn and update
                     turn++;
-                    updateEmbed(event);
+                    Color userColor = (turn % 2) == 0 ? RED_CIRCLE : BLUE_CIRCLE;
+                    updateEmbed(event, userColor);
                 }
             }
 
@@ -79,19 +87,19 @@ public class ConnectFourGame extends ReactionGame {
         return column;
     }
 
-    private void updateEmbed(GuildMessageReactionAddEvent event) {
+    private void updateEmbed(GuildMessageReactionAddEvent event, Color color) {
         String messageId = event.getMessageId();
         Message message = event.getChannel().retrieveMessageById(messageId).complete();
         MessageEmbed oldEmbed = message.getEmbeds().get(0);
         EmbedBuilder embed = new EmbedBuilder();
-        
+
         //copy title and footer to new embed
         embed.setTitle(oldEmbed.getTitle());
         if (oldEmbed.getFooter() == null) return;
         embed.setFooter(oldEmbed.getFooter().getText());
 
-        //update color to current player
-        embed.setColor((turn % 2) == 0 ? RED_CIRCLE : BLUE_CIRCLE);
+        //update color to current player or draw
+        embed.setColor(color);
 
         //update board state
         embed.setDescription(board.toString());
