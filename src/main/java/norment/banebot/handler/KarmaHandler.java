@@ -15,9 +15,12 @@ public class KarmaHandler {
     public static HashMap<Guild, ReactionEmote> downvoteReactions = new HashMap<>();
 
     public static void init(JDA jda) {
-        MongoCollection<Document> karmaCollection = DatabaseHandler.karmaCollection;
+        loadReactions(jda);
+    }
 
-        for (Document doc : karmaCollection.find()) {
+    private static void loadReactions(JDA jda) {
+        MongoCollection<Document> reactionsCollection = DatabaseHandler.reactionsCollection;
+        for (Document doc : reactionsCollection.find()) {
             String guildId = doc.get("guild").toString();
             String upvoteId = doc.get("upvote").toString();
             String downvoteId = doc.get("downvote").toString();
@@ -70,12 +73,8 @@ public class KarmaHandler {
         Guild guild = event.getGuild();
 
         //check if reaction is registered for voting
-        if (reactionEmote.equals(upvoteReactions.get(guild))) {
-            return true;
-        } else if (reactionEmote.equals(downvoteReactions.get(guild))) {
-            return true;
-        } else {
-            return false;
-        }
+        boolean isUpvote = reactionEmote.equals(upvoteReactions.get(guild));
+        boolean isDownvote = reactionEmote.equals(downvoteReactions.get(guild));
+        return isUpvote || isDownvote;
     }
 }
