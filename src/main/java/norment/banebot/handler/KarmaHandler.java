@@ -1,12 +1,16 @@
 package norment.banebot.handler;
 
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Updates;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageReaction.ReactionEmote;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 
 import java.util.HashMap;
 
@@ -65,16 +69,39 @@ public class KarmaHandler {
     }
 
     public static void handleReaction(GuildMessageReactionAddEvent event) {
-
-    }
-
-    public static boolean isKarmaReaction(GuildMessageReactionAddEvent event) {
+        //Get vote type and update karma
         ReactionEmote reactionEmote = event.getReactionEmote();
         Guild guild = event.getGuild();
-
-        //check if reaction is registered for voting
         boolean isUpvote = reactionEmote.equals(upvoteReactions.get(guild));
         boolean isDownvote = reactionEmote.equals(downvoteReactions.get(guild));
-        return isUpvote || isDownvote;
+
+        //Ignore if not a karma reaction
+        if (!isUpvote && !isDownvote) return;
+
+        //Ignore votes on self
+        Message message = event.getChannel().retrieveMessageById(event.getMessageId()).complete();
+        if (event.getUser().equals(message.getAuthor())) return;
+
+        //Find document of message author
+        MongoCollection<Document> karmaCollection = DatabaseHandler.karmaCollection;
+        Document queryDocument = new Document()
+                .append("guild", guild.getId())
+                .append("user", message.getAuthor().getId());
+        Document userDocument = karmaCollection.find(queryDocument).first();
+
+        //Create user document if doesn't exist
+        if (userDocument == null) createUser(event.getGuild(), message.getAuthor());
+
+        //Create update operation and update karma
+        Bson updateOp = Updates.inc("karma", isUpvote ? 1 : -1);
+        karmaCollection.updateOne(queryDocument, updateOp);
+    }
+
+    private static void createUser(Guild guild, User user) {
+        MongoCollection<Document> karmaCollection = DatabaseHandler.karmaCollection;
+        Document doc = new Document()
+                .append("guild", guild.getId())
+                .append("user", user.getId());
+        karmaCollection.insertOne(doc);
     }
 }

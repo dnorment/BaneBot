@@ -26,7 +26,7 @@ public class ReactionHandler {
                     if (game != null) game.handleReaction(event);
                 }
             }
-        } else if (KarmaHandler.isKarmaReaction(event)) {
+        } else {
             KarmaHandler.handleReaction(event);
         }
     }
