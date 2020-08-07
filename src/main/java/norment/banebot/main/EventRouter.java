@@ -20,7 +20,7 @@ public class EventRouter extends ListenerAdapter {
         //Ignore all bots
         if (event.getAuthor().isBot()) return;
 
-        //Check if message starts with prefix, treat as command
+        //Check if message starts with prefix, if so, treat the message as command
         if (event.getMessage().getContentRaw().startsWith(BaneBot.prefix)) {
             CommandHandler.handleCommand(event);
         }
