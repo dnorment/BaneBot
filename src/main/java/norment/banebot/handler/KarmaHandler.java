@@ -104,4 +104,20 @@ public class KarmaHandler {
                 .append("user", user.getId());
         karmaCollection.insertOne(doc);
     }
+
+    public static int getKarma(Guild guild, User user) {
+        MongoCollection<Document> karmaCollection = DatabaseHandler.karmaCollection;
+        Document queryDocument = new Document()
+                .append("guild", guild.getId())
+                .append("user", user.getId());
+        Document userDocument = karmaCollection.find(queryDocument).first();
+
+        int karma = 0;
+
+        if (userDocument == null) {
+            return karma;
+        } else {
+            return userDocument.getInteger("karma");
+        }
+    }
 }
