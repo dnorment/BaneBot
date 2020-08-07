@@ -31,7 +31,7 @@ public class EventRouter extends ListenerAdapter {
         //Ignore bot reactions
         if (event.getUser().isBot()) return;
 
-        //Check if reacting to an embed message from this bot and pass to ReactionHandler
+        //Check if reacting to an embed message from this bot, if so, pass to ReactionHandler
         String messageId = event.getMessageId();
         Message message = event.getChannel().retrieveMessageById(messageId).complete();
 
