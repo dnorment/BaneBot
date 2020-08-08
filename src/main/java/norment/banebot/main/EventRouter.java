@@ -3,6 +3,7 @@ package norment.banebot.main;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
+import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionRemoveEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import norment.banebot.handler.CommandHandler;
 import norment.banebot.handler.DatabaseHandler;
@@ -34,6 +35,18 @@ public class EventRouter extends ListenerAdapter {
         if (event.getUser().isBot()) return;
 
         //Pass non-bot reactions to reaction handler
-        ReactionHandler.handleReaction(event);
+        ReactionHandler.handleAddReaction(event);
+    }
+
+    @Override
+    public void onGuildMessageReactionRemove(GuildMessageReactionRemoveEvent event) {
+        if (event.getUser() == null) return;
+
+        //Ignore bot reaction removals
+        if (event.getUser().isBot()) return;
+
+        //Pass non-bot reaction removals to reaction handler
+        ReactionHandler.handleRemoveReaction(event);
+
     }
 }

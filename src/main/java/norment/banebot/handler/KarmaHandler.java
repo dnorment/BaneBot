@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageReaction.ReactionEmote;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
+import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionRemoveEvent;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
@@ -68,7 +69,7 @@ public class KarmaHandler {
         }
     }
 
-    public static void handleReaction(GuildMessageReactionAddEvent event) {
+    public static void handleAddReaction(GuildMessageReactionAddEvent event) {
         //Get vote type and update karma
         ReactionEmote reactionEmote = event.getReactionEmote();
         Guild guild = event.getGuild();
@@ -94,6 +95,33 @@ public class KarmaHandler {
 
         //Create update operation and update karma
         Bson updateOp = Updates.inc("karma", isUpvote ? 1 : -1);
+        karmaCollection.updateOne(queryDocument, updateOp);
+    }
+
+    public static void handleRemoveReaction(GuildMessageReactionRemoveEvent event) {
+        if (event.getUser() == null) return;
+
+        //Get vote type
+        ReactionEmote reactionEmote = event.getReactionEmote();
+        Guild guild = event.getGuild();
+        boolean isUpvote = reactionEmote.equals(upvoteReactions.get(guild));
+        boolean isDownvote = reactionEmote.equals(downvoteReactions.get(guild));
+
+        //Ignore if not a karma reaction
+        if (!isUpvote && !isDownvote) return;
+
+        //Ignore votes on self
+        Message message = event.getChannel().retrieveMessageById(event.getMessageId()).complete();
+        if (event.getUser().equals(message.getAuthor())) return;
+
+        //Find document of message author
+        MongoCollection<Document> karmaCollection = DatabaseHandler.karmaCollection;
+        Document queryDocument = new Document()
+                .append("guild", guild.getId())
+                .append("user", message.getAuthor().getId());
+
+        //Create update operation and update karma
+        Bson updateOp = Updates.inc("karma", isUpvote ? -1 : 1);
         karmaCollection.updateOne(queryDocument, updateOp);
     }
 

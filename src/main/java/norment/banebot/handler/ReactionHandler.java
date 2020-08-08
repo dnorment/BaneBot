@@ -3,10 +3,11 @@ package norment.banebot.handler;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
+import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionRemoveEvent;
 import norment.banebot.game.ReactionGame;
 
 public class ReactionHandler {
-    public static void handleReaction(GuildMessageReactionAddEvent event) {
+    public static void handleAddReaction(GuildMessageReactionAddEvent event) {
         String messageId = event.getMessageId();
         Message message = event.getChannel().retrieveMessageById(messageId).complete();
 
@@ -27,8 +28,12 @@ public class ReactionHandler {
                 }
             }
         } else {
-            KarmaHandler.handleReaction(event);
+            KarmaHandler.handleAddReaction(event);
         }
+    }
+
+    public static void handleRemoveReaction(GuildMessageReactionRemoveEvent event) {
+        KarmaHandler.handleRemoveReaction(event);
     }
 
     private static boolean hasBaneEmbed(Message message) {
