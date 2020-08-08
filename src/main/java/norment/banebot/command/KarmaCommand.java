@@ -23,6 +23,8 @@ public class KarmaCommand extends Command {
         return new String[]{
                 "karma::Get your current karma",
                 "karma `<@user>``::Get `user`'s current karma",
+                "karma setupvote `<reaction>`::Sets `reaction` as the upvote reaction",
+                "karma setdownvote `<reaction>`::Sets `reaction` as the downvote reaction"
         };
     }
 
@@ -38,10 +40,20 @@ public class KarmaCommand extends Command {
         } else if (args.length == 2) {
             //get mentioned user
             List<User> mentionedUsers = event.getMessage().getMentionedUsers();
-            if (mentionedUsers.size() != 1) showUsage(event, this, true);
-
+            if (mentionedUsers.size() != 1) {
+                showUsage(event, this, true);
+                return;
+            }
             int userKarma = KarmaHandler.getKarma(event.getGuild(), mentionedUsers.get(0));
             channel.sendMessage("" + userKarma).queue();
+        } else if (args.length == 3) {
+            if (args[1].equals("setupvote")) {
+                if (KarmaHandler.setUpvoteReaction(event)) channel.sendMessage("Set as upvote").queue();
+            } else if (args[1].equals("setdownvote")) {
+                if (KarmaHandler.setDownvoteReaction(event)) channel.sendMessage("Set as downvote").queue();
+            } else {
+                showUsage(event, this, true);
+            }
         } else {
             showUsage(event, this, true);
         }

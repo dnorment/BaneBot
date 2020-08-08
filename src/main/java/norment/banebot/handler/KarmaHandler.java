@@ -8,12 +8,14 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageReaction.ReactionEmote;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionRemoveEvent;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
 import java.util.HashMap;
+import java.util.List;
 
 public class KarmaHandler {
     public static HashMap<Guild, ReactionEmote> upvoteReactions = new HashMap<>();
@@ -27,8 +29,6 @@ public class KarmaHandler {
         MongoCollection<Document> reactionsCollection = DatabaseHandler.reactionsCollection;
         for (Document doc : reactionsCollection.find()) {
             String guildId = doc.get("guild").toString();
-            String upvoteId = doc.get("upvote").toString();
-            String downvoteId = doc.get("downvote").toString();
 
             Guild guild = jda.getGuildById(guildId);
             if (guild == null) continue;
@@ -37,36 +37,73 @@ public class KarmaHandler {
             boolean downvoteRegistered = false;
 
             //check if upvote reaction is a custom emote from guild
-            for (int i = 0; i < guild.getEmotes().size(); i++) {
-                Emote emote = guild.getEmotes().get(i);
-                if (emote.getId().equals(upvoteId)) {
-                    ReactionEmote upvoteReaction = ReactionEmote.fromCustom(emote);
-                    upvoteReactions.put(guild, upvoteReaction);
-                    upvoteRegistered = true;
-                    break;
+            if (doc.get("upvote") != null) {
+                String upvoteId = doc.get("upvote").toString();
+                for (int i = 0; i < guild.getEmotes().size(); i++) {
+                    Emote emote = guild.getEmotes().get(i);
+                    if (emote.getId().equals(upvoteId)) {
+                        ReactionEmote upvoteReaction = ReactionEmote.fromCustom(emote);
+                        upvoteReactions.put(guild, upvoteReaction);
+                        upvoteRegistered = true;
+                        break;
+                    }
                 }
-            }
-            //is not a custom reaction, treat as unicode emoji
-            if (!upvoteRegistered) {
-                ReactionEmote upvoteReaction = ReactionEmote.fromUnicode(upvoteId, jda);
-                upvoteReactions.put(guild, upvoteReaction);
+                //is not a custom reaction, treat as unicode emoji
+                if (!upvoteRegistered) {
+                    ReactionEmote upvoteReaction = ReactionEmote.fromUnicode(upvoteId, jda);
+                    upvoteReactions.put(guild, upvoteReaction);
+                }
             }
 
             //repeat for downvote
-            for (int i = 0; i < guild.getEmotes().size(); i++) {
-                Emote emote = guild.getEmotes().get(i);
-                if (emote.getId().equals(downvoteId)) {
-                    ReactionEmote downvoteReaction = ReactionEmote.fromCustom(emote);
+            if (doc.get("downvote") != null) {
+                String downvoteId = doc.get("downvote").toString();
+                for (int i = 0; i < guild.getEmotes().size(); i++) {
+                    Emote emote = guild.getEmotes().get(i);
+                    if (emote.getId().equals(downvoteId)) {
+                        ReactionEmote downvoteReaction = ReactionEmote.fromCustom(emote);
+                        downvoteReactions.put(guild, downvoteReaction);
+                        downvoteRegistered = true;
+                        break;
+                    }
+                }
+                if (!downvoteRegistered) {
+                    ReactionEmote downvoteReaction = ReactionEmote.fromUnicode(downvoteId, jda);
                     downvoteReactions.put(guild, downvoteReaction);
-                    downvoteRegistered = true;
-                    break;
                 }
             }
-            if (!downvoteRegistered) {
-                ReactionEmote downvoteReaction = ReactionEmote.fromUnicode(downvoteId, jda);
-                upvoteReactions.put(guild, downvoteReaction);
+        }
+    }
+
+    private static void writeReactions(Guild guild) {
+        MongoCollection<Document> reactionsCollection = DatabaseHandler.reactionsCollection;
+
+        //find guild document
+        Document queryDocument = new Document()
+                .append("guild", guild.getId());
+
+        Document doc = reactionsCollection.find(queryDocument).first();
+
+        //append the emoji if it is emoji or emote ID if it is emote
+        if (upvoteReactions.containsKey(guild)) {
+            ReactionEmote upvoteReaction = upvoteReactions.get(guild);
+            if (upvoteReaction.isEmoji()) {
+                doc.append("upvote", upvoteReaction.getEmoji());
+            } else {
+                doc.append("upvote", upvoteReaction.getId());
             }
         }
+        if (downvoteReactions.containsKey(guild)) {
+            ReactionEmote downvoteReaction = downvoteReactions.get(guild);
+            if (downvoteReaction.isEmoji()) {
+                doc.append("downvote", downvoteReaction.getEmoji());
+            } else {
+                doc.append("downvote", downvoteReaction.getId());
+            }
+        }
+
+        //update guild document with current reactions
+        reactionsCollection.replaceOne(queryDocument, doc);
     }
 
     public static void handleAddReaction(GuildMessageReactionAddEvent event) {
@@ -147,5 +184,43 @@ public class KarmaHandler {
         } else {
             return userDocument.getInteger("karma");
         }
+    }
+
+    public static boolean setUpvoteReaction(GuildMessageReceivedEvent event) {
+        return setReaction(event, upvoteReactions);
+    }
+
+    public static boolean setDownvoteReaction(GuildMessageReceivedEvent event) {
+        return setReaction(event, downvoteReactions);
+    }
+
+    private static boolean setReaction(GuildMessageReceivedEvent event, HashMap<Guild, ReactionEmote> map) {
+        List<Emote> emotes = event.getMessage().getEmotes();
+        Guild guild = event.getGuild();
+        String[] args = event.getMessage().getContentRaw().split("\\s+"); //split by spaces
+
+        ReactionEmote reaction = null;
+        if (emotes.isEmpty()) {
+            //not custom emote, try to parse as unicode
+            try {
+                reaction = ReactionEmote.fromUnicode(args[2], event.getJDA());
+            } catch (Exception e) {
+                return false;
+            }
+        } else {
+            boolean registered = false;
+            for (int i = 0; i < guild.getEmotes().size(); i++) {
+                Emote emote = guild.getEmotes().get(i);
+                if (emote.getId().equals(emotes.get(0).getId())) {
+                    reaction = ReactionEmote.fromCustom(emote);
+                    registered = true;
+                    break;
+                }
+            }
+            if (!registered) return false;
+        }
+        map.put(guild, reaction);
+        writeReactions(guild);
+        return true;
     }
 }
