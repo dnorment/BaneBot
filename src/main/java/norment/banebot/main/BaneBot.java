@@ -5,6 +5,7 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 import norment.banebot.config.ReadConfig;
@@ -27,6 +28,7 @@ public class BaneBot {
         JDABuilder builder = JDABuilder.create(
                 token,
                 GatewayIntent.GUILD_EMOJIS,
+                GatewayIntent.GUILD_MEMBERS,
                 GatewayIntent.GUILD_MESSAGES,
                 GatewayIntent.GUILD_MESSAGE_REACTIONS,
                 GatewayIntent.GUILD_VOICE_STATES
@@ -38,6 +40,9 @@ public class BaneBot {
         //Set visible bot status
         builder.setStatus(OnlineStatus.ONLINE)
                 .setActivity(Activity.watching("the fire rise"));
+
+        //Cache all users for karma leaderboard
+        builder.setMemberCachePolicy(MemberCachePolicy.ALL);
 
         //Launch
         JDA jda = builder.build();
