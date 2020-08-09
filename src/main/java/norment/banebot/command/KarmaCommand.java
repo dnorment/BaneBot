@@ -15,7 +15,7 @@ public class KarmaCommand extends Command {
 
     @Override
     public String getDescription() {
-        return "Returns your karma or sets up the reactions for the karma system";
+        return "Displays karma or sets up the reactions for the karma system";
     }
 
     @Override
@@ -23,8 +23,9 @@ public class KarmaCommand extends Command {
         return new String[]{
                 "karma::Get your current karma",
                 "karma `<@user>``::Get `user`'s current karma",
-                "karma setupvote `<reaction>`::Sets `reaction` as the upvote reaction",
-                "karma setdownvote `<reaction>`::Sets `reaction` as the downvote reaction"
+                "karma leaderboard::Show a karma leaderboard for this server",
+                "karma setupvote `<reaction>`::Sets `reaction` emoji/emote as the upvote reaction",
+                "karma setdownvote `<reaction>`::Sets `reaction` emoji/emote as the downvote reaction"
         };
     }
 
@@ -38,14 +39,19 @@ public class KarmaCommand extends Command {
             int userKarma = KarmaHandler.getKarma(event.getGuild(), event.getAuthor());
             channel.sendMessage("" + userKarma).queue();
         } else if (args.length == 2) {
-            //get mentioned user
-            List<User> mentionedUsers = event.getMessage().getMentionedUsers();
-            if (mentionedUsers.size() != 1) {
-                showUsage(event, this, true);
-                return;
+            if (args[1].equals("leaderboard")) {
+                String leaderboard = KarmaHandler.getKarmaLeaderboard(event.getGuild(), event.getAuthor());
+                channel.sendMessage(leaderboard).queue();
+            } else {
+                //get mentioned user
+                List<User> mentionedUsers = event.getMessage().getMentionedUsers();
+                if (mentionedUsers.size() != 1) {
+                    showUsage(event, this, true);
+                    return;
+                }
+                int userKarma = KarmaHandler.getKarma(event.getGuild(), mentionedUsers.get(0));
+                channel.sendMessage("" + userKarma).queue();
             }
-            int userKarma = KarmaHandler.getKarma(event.getGuild(), mentionedUsers.get(0));
-            channel.sendMessage("" + userKarma).queue();
         } else if (args.length == 3) {
             if (args[1].equals("setupvote")) {
                 if (KarmaHandler.setUpvoteReaction(event)) channel.sendMessage("Set as upvote").queue();
