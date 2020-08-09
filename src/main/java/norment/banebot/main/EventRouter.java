@@ -1,18 +1,21 @@
 package norment.banebot.main;
 
-import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionAddEvent;
+import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionRemoveEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import norment.banebot.handler.CommandHandler;
 import norment.banebot.handler.DatabaseHandler;
+import norment.banebot.handler.KarmaHandler;
 import norment.banebot.handler.ReactionHandler;
 
 public class EventRouter extends ListenerAdapter {
 
-    public EventRouter() {
+    public EventRouter(JDA jda) {
         CommandHandler.init();
         DatabaseHandler.init();
+        KarmaHandler.init(jda);
     }
 
     @Override
@@ -31,12 +34,19 @@ public class EventRouter extends ListenerAdapter {
         //Ignore bot reactions
         if (event.getUser().isBot()) return;
 
-        //Check if reacting to an embed message from this bot and pass to ReactionHandler
-        String messageId = event.getMessageId();
-        Message message = event.getChannel().retrieveMessageById(messageId).complete();
+        //Pass non-bot reactions to reaction handler
+        ReactionHandler.handleAddReaction(event);
+    }
 
-        if (!message.getEmbeds().isEmpty() && message.getAuthor() == event.getJDA().getSelfUser()) {
-            ReactionHandler.handleReaction(event);
-        }
+    @Override
+    public void onGuildMessageReactionRemove(GuildMessageReactionRemoveEvent event) {
+        if (event.getUser() == null) return;
+
+        //Ignore bot reaction removals
+        if (event.getUser().isBot()) return;
+
+        //Pass non-bot reaction removals to reaction handler
+        ReactionHandler.handleRemoveReaction(event);
+
     }
 }

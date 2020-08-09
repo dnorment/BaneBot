@@ -63,7 +63,7 @@ public class ScoreHandler {
         return new WinLossData(wins, losses);
     }
 
-    public static void createUser(String game, Guild guild, User user) {
+    private static void createUser(String game, Guild guild, User user) {
         MongoCollection<Document> scoresCollection = DatabaseHandler.scoresCollection;
         Document doc = new Document()
                 .append("game", game)

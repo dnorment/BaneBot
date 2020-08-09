@@ -1,25 +1,22 @@
 package norment.banebot.main;
 
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 import norment.banebot.config.ReadConfig;
 
 import javax.security.auth.login.LoginException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class BaneBot {
 
     public static String prefix;
 
     public static void main(String[] args) throws LoginException {
-        //Setup logger
-        Logger.getLogger("org.mongodb.driver").setLevel(Level.SEVERE);
-
         //Read properties file
         ReadConfig cfg = new ReadConfig();
 
@@ -30,12 +27,13 @@ public class BaneBot {
         //Set bot token and allowed events
         JDABuilder builder = JDABuilder.create(
                 token,
+                GatewayIntent.GUILD_EMOJIS,
+                GatewayIntent.GUILD_MEMBERS,
                 GatewayIntent.GUILD_MESSAGES,
                 GatewayIntent.GUILD_MESSAGE_REACTIONS,
                 GatewayIntent.GUILD_VOICE_STATES
         ).disableCache(
                 CacheFlag.ACTIVITY,
-                CacheFlag.EMOTE,
                 CacheFlag.CLIENT_STATUS
         );
 
@@ -43,11 +41,14 @@ public class BaneBot {
         builder.setStatus(OnlineStatus.ONLINE)
                 .setActivity(Activity.watching("the fire rise"));
 
-        //Listen for events and handle
-        builder.addEventListeners(new EventRouter());
+        //Cache all users for karma leaderboard
+        builder.setMemberCachePolicy(MemberCachePolicy.ALL);
 
         //Launch
-        builder.build();
+        JDA jda = builder.build();
+
+        //Listen for events and handle
+        jda.addEventListener(new EventRouter(jda));
     }
 
 }
