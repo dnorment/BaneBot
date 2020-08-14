@@ -57,8 +57,8 @@ public class ScoreHandler {
         if (doc == null) {
             createUser(game, guild, user);
         } else {
-            wins = (int) doc.get("wins");
-            losses = (int) doc.get("losses");
+            if (doc.get("wins") != null) wins = (int) doc.get("wins");
+            if (doc.get("losses") != null) losses = (int) doc.get("losses");
         }
         return new WinLossData(wins, losses);
     }

@@ -11,12 +11,17 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import norment.banebot.config.ReadConfig;
 
 import javax.security.auth.login.LoginException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class BaneBot {
 
     public static String prefix;
 
     public static void main(String[] args) throws LoginException {
+        //Setup logger
+        Logger.getLogger("org.mongodb.driver").setLevel(Level.SEVERE);
+
         //Read properties file
         ReadConfig cfg = new ReadConfig();
 
