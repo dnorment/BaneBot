@@ -190,6 +190,8 @@ public class KarmaHandler {
         Document queryDocument = new Document()
                 .append("guild", guild.getId());
 
+        if (reactionsCollection.find(queryDocument).first() == null) reactionsCollection.insertOne(queryDocument);
+
         Document doc = reactionsCollection.find(queryDocument).first();
 
         //append the emoji if it is emoji or emote ID if it is emote
