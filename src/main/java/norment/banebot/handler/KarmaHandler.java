@@ -23,6 +23,9 @@ public class KarmaHandler {
     }
 
     public static void handleAddReaction(GuildMessageReactionAddEvent event) {
+        //Skip reactions from ignored users
+        if (isIgnored(event.getGuild(), event.getUser())) return;
+
         //Get vote type and update karma
         ReactionEmote reactionEmote = event.getReactionEmote();
         Guild guild = event.getGuild();
@@ -53,6 +56,9 @@ public class KarmaHandler {
 
     public static void handleRemoveReaction(GuildMessageReactionRemoveEvent event) {
         if (event.getUser() == null) return;
+
+        //Skip reactions from ignored users
+        if (isIgnored(event.getGuild(), event.getUser())) return;
 
         //Get vote type
         ReactionEmote reactionEmote = event.getReactionEmote();
@@ -130,7 +136,7 @@ public class KarmaHandler {
             //negate ignored and update
             Bson updateOp = Updates.set("ignored", !ignored);
             karmaCollection.updateOne(queryDocument, updateOp);
-        } else if (userDocument != null){
+        } else if (userDocument != null) {
             //user document exists, but doesn't have ignored boolean
             //set ignored to true
             Bson updateOp = Updates.set("ignored", true);
