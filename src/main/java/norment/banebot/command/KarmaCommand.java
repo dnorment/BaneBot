@@ -1,5 +1,6 @@
 package norment.banebot.command;
 
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
@@ -54,6 +55,12 @@ public class KarmaCommand extends Command {
                 channel.sendMessage("" + userKarma).queue();
             }
         } else if (args.length == 3) {
+            //check privilege for administration commands
+            if (event.getMember() != null && !event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
+                channel.sendMessage("Command only available for administrators").queue();
+            }
+
+            //parse command
             switch (args[1]) {
                 case "ignore":
                     //check that only 1 user is mentioned
