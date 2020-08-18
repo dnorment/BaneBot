@@ -22,7 +22,7 @@ public class KarmaCommand extends Command {
     public String[] getUsage() {
         return new String[]{
                 "karma::Get your current karma",
-                "karma `<@user>``::Get `user`'s current karma",
+                "karma `<@user>`::Get `user`'s current karma",
                 "karma leaderboard::Show a karma leaderboard for this server",
                 "karma setupvote `<reaction>`::Sets `reaction` emoji/emote as the upvote reaction",
                 "karma setdownvote `<reaction>`::Sets `reaction` emoji/emote as the downvote reaction"
@@ -40,7 +40,7 @@ public class KarmaCommand extends Command {
             channel.sendMessage("" + userKarma).queue();
         } else if (args.length == 2) {
             if (args[1].equals("leaderboard")) {
-                String leaderboard = KarmaHandler.getKarmaLeaderboard(event.getGuild(), event.getAuthor());
+                String leaderboard = KarmaHandler.getKarmaLeaderboard(event.getGuild());
                 channel.sendMessage(leaderboard).queue();
             } else {
                 //get mentioned user

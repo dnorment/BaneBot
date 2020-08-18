@@ -102,18 +102,17 @@ public class KarmaHandler {
         }
     }
 
-    public static String getKarmaLeaderboard(Guild guild, User author) {
         MongoCollection<Document> karmaCollection = DatabaseHandler.karmaCollection;
         Document queryDocument = new Document("guild", guild.getId());
 
         //get list of users in guild and sort by descending karma
         var topKarmaCollection = karmaCollection.find(queryDocument).sort(new Document("karma", -1));
-        StringBuilder sb = new StringBuilder("**Top karma for " + guild.getName() + "**\n");
 
         //skip leaderboard creation if no users have any karma
         if (topKarmaCollection.first() == null) return "No users with karma found in this server";
 
         //add each user to return string
+        StringBuilder sb = new StringBuilder("**Top karma for " + guild.getName() + "**\n");
         sb.append("```");
         for (Document doc : topKarmaCollection) {
             String userId = doc.get("user").toString();
@@ -125,7 +124,7 @@ public class KarmaHandler {
                 }
             }
             if (user == null) continue;
-            sb.append(String.format("%3d\t%s#%s%n",
+            sb.append(String.format("%5d\t%s#%s%n",
                     doc.getInteger("karma"),
                     user.getName(),
                     user.getDiscriminator())
