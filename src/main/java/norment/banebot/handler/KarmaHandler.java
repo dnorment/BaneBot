@@ -110,6 +110,9 @@ public class KarmaHandler {
         var topKarmaCollection = karmaCollection.find(queryDocument).sort(new Document("karma", -1));
         StringBuilder sb = new StringBuilder("**Top karma for " + guild.getName() + "**\n");
 
+        //skip leaderboard creation if no users have any karma
+        if (topKarmaCollection.first() == null) return "No users with karma found in this server";
+
         //add each user to return string
         sb.append("```");
         for (Document doc : topKarmaCollection) {
