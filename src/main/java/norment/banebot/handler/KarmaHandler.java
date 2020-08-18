@@ -102,6 +102,48 @@ public class KarmaHandler {
         }
     }
 
+    public static boolean isIgnored(Guild guild, User user) {
+        MongoCollection<Document> karmaCollection = DatabaseHandler.karmaCollection;
+        Document queryDocument = new Document()
+                .append("guild", guild.getId())
+                .append("user", user.getId());
+        Document userDocument = karmaCollection.find(queryDocument).first();
+
+        //if user document exists and contains ignored field
+        if (userDocument != null && userDocument.getBoolean("ignored") != null) {
+            return userDocument.getBoolean("ignored");
+        }
+        return false;
+    }
+
+    public static void setIgnored(GuildMessageReceivedEvent event) {
+        MongoCollection<Document> karmaCollection = DatabaseHandler.karmaCollection;
+        User userToIgnore = event.getMessage().getMentionedUsers().get(0);
+        Document queryDocument = new Document()
+                .append("guild", event.getGuild().getId())
+                .append("user", userToIgnore.getId());
+        Document userDocument = karmaCollection.find(queryDocument).first();
+
+        if (userDocument != null && userDocument.getBoolean("ignored") != null) {
+            //user document with ignored boolean exists
+            boolean ignored = userDocument.getBoolean("ignored");
+            //negate ignored and update
+            Bson updateOp = Updates.set("ignored", !ignored);
+            karmaCollection.updateOne(queryDocument, updateOp);
+        } else if (userDocument != null){
+            //user document exists, but doesn't have ignored boolean
+            //set ignored to true
+            Bson updateOp = Updates.set("ignored", true);
+            karmaCollection.updateOne(queryDocument, updateOp);
+        } else {
+            //user document doesn't exist
+            //create user and set ignored to true
+            queryDocument.append("ignored", true);
+            karmaCollection.insertOne(queryDocument);
+        }
+    }
+
+    public static String getKarmaLeaderboard(Guild guild) {
         MongoCollection<Document> karmaCollection = DatabaseHandler.karmaCollection;
         Document queryDocument = new Document("guild", guild.getId());
 

@@ -24,6 +24,7 @@ public class KarmaCommand extends Command {
                 "karma::Get your current karma",
                 "karma `<@user>`::Get `user`'s current karma",
                 "karma leaderboard::Show a karma leaderboard for this server",
+                "karma ignore `<@user>`::Ignores or unignores all karma reactions from `user`",
                 "karma setupvote `<reaction>`::Sets `reaction` emoji/emote as the upvote reaction",
                 "karma setdownvote `<reaction>`::Sets `reaction` emoji/emote as the downvote reaction"
         };
@@ -53,12 +54,27 @@ public class KarmaCommand extends Command {
                 channel.sendMessage("" + userKarma).queue();
             }
         } else if (args.length == 3) {
-            if (args[1].equals("setupvote")) {
-                if (KarmaHandler.setUpvoteReaction(event)) channel.sendMessage("Set as upvote").queue();
-            } else if (args[1].equals("setdownvote")) {
-                if (KarmaHandler.setDownvoteReaction(event)) channel.sendMessage("Set as downvote").queue();
-            } else {
-                showUsage(event, this, true);
+            switch (args[1]) {
+                case "ignore":
+                    //check that only 1 user is mentioned
+                    List<User> mentionedUsers = event.getMessage().getMentionedUsers();
+                    if (mentionedUsers.size() != 1) {
+                        showUsage(event, this, true);
+                        return;
+                    }
+                    //negate ignore boolean of user
+                    KarmaHandler.setIgnored(event);
+                    channel.sendMessage("Changing ignore of user for all karma reactions").queue();
+                    break;
+                case "setupvote":
+                    if (KarmaHandler.setUpvoteReaction(event)) channel.sendMessage("Set as upvote").queue();
+                    break;
+                case "setdownvote":
+                    if (KarmaHandler.setDownvoteReaction(event)) channel.sendMessage("Set as downvote").queue();
+                    break;
+                default:
+                    showUsage(event, this, true);
+                    break;
             }
         } else {
             showUsage(event, this, true);
