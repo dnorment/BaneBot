@@ -55,11 +55,6 @@ public class KarmaCommand extends Command {
                 channel.sendMessage("" + userKarma).queue();
             }
         } else if (args.length == 3) {
-            //check privilege for administration commands
-            if (event.getMember() != null && !event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
-                channel.sendMessage("Command only available for administrators").queue();
-            }
-
             //parse command
             switch (args[1]) {
                 case "ignore":
