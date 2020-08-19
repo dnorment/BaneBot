@@ -11,6 +11,8 @@ import net.dv8tion.jda.api.events.message.guild.react.GuildMessageReactionRemove
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
+import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
 
@@ -26,6 +28,12 @@ public class KarmaHandler {
         //Skip reactions from ignored users
         if (isIgnored(event.getGuild(), event.getUser())) return;
 
+        //Skip reactions from messages more than 24h ago
+        Message message = event.getChannel().retrieveMessageById(event.getMessageId()).complete();
+        OffsetDateTime created = message.getTimeCreated();
+        OffsetDateTime oneDayAgo = OffsetDateTime.now().minus(Duration.ofDays(1));
+        if (created.isBefore(oneDayAgo)) return;
+
         //Get vote type and update karma
         ReactionEmote reactionEmote = event.getReactionEmote();
         Guild guild = event.getGuild();
@@ -36,7 +44,6 @@ public class KarmaHandler {
         if (!isUpvote && !isDownvote) return;
 
         //Ignore votes on self
-        Message message = event.getChannel().retrieveMessageById(event.getMessageId()).complete();
         if (event.getUser().equals(message.getAuthor())) return;
 
         //Find document of message author
