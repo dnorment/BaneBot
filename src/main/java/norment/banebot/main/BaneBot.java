@@ -20,7 +20,7 @@ public class BaneBot {
 
     public static void main(String[] args) throws LoginException {
         //Setup logger
-        Logger.getLogger("org.mongodb.driver").setLevel(Level.SEVERE);
+        Logger.getLogger("JULLogger").setLevel(Level.SEVERE);
 
         //Read properties file
         ReadConfig cfg = new ReadConfig();
