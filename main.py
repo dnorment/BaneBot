@@ -1,5 +1,6 @@
-import discord
 import logging
+
+import discord
 
 import message_handler
 import settings
@@ -10,15 +11,16 @@ logging.basicConfig(level=logging.INFO,
 
 logger = logging.getLogger('bane')
 
-def main():
 
+def main():
     logger.info('Starting bot')
     client = discord.Client()
 
     @client.event
     async def on_ready():
         logger.info('Setting presence')
-        await client.change_presence(activity=discord.Streaming(name='this plane', url='https://www.youtube.com/watch?v=LYQpJHmo8nE'))
+        await client.change_presence(
+            activity=discord.Streaming(name='this plane', url='https://www.youtube.com/watch?v=LYQpJHmo8nE'))
 
         logger.info(f'Logged in as {client.user.name}, ID {client.user.id}')
 

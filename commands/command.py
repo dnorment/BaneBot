@@ -1,9 +1,10 @@
 import discord
+
 import settings
 
 
 class Command:
-    '''Base Command class for any commands'''
+    """Base Command class for any commands"""
 
     def __init__(self, description, params):
         self.name = type(self).__name__.lower()
@@ -24,7 +25,7 @@ class Command:
             desc += '\n'.join(f'*{p["name"]}*: {p["desc"]}' for p in self.params)
 
         embed = discord.Embed(
-            title=settings.PREFIX + type(self).__name__.lower(),
+            title=settings.PREFIX + self.name,
             description=desc,
             color=discord.Color.green() if not error else discord.Color.red()
         )

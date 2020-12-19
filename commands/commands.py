@@ -4,7 +4,7 @@ from commands.command import Command
 
 
 class Commands(Command):
-    '''Shows all available commands'''
+    """Shows all available commands"""
 
     def __init__(self):
         description = 'Displays a list of all base commands'
