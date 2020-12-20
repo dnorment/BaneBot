@@ -1,6 +1,7 @@
 import discord
 
 from commands.command import Command
+from exceptions import ArgumentNumberError
 
 
 class Commands(Command):
@@ -14,15 +15,21 @@ class Commands(Command):
     async def handle(self, params, message, client, error=False):
         from message_handler import COMMAND_HANDLERS
 
-        # list all command names with their descriptions
-        desc = ''
-        for cmd in sorted(COMMAND_HANDLERS.items()):
-            desc += '\n' + cmd[1].description
+        try:
+            if len(params) != 0:
+                raise ArgumentNumberError
 
-        # build embed and send
-        embed = discord.Embed(
-            title='Commands',
-            description=desc,
-            color=discord.Color.green() if not error else discord.Color.red()
-        )
-        await message.channel.send(embed=embed)
+            # list all command names with their descriptions
+            desc = ''
+            for cmd in sorted(COMMAND_HANDLERS.items()):
+                desc += '\n' + cmd[1].description
+
+            # build embed and send
+            embed = discord.Embed(
+                title=type(self).__name__,
+                description=desc,
+                color=discord.Color.green() if not error else discord.Color.red()
+            )
+            await message.channel.send(embed=embed)
+        except ArgumentNumberError:
+            await super().show_usage(message, error=True)

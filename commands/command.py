@@ -10,22 +10,18 @@ class Command:
         self.name = type(self).__name__.lower()
         self.params = params
 
-        desc = f'**{settings.PREFIX}{self.name}**'
+        desc = f'**{settings.PREFIX}{self.name}**: {description}'
 
-        if self.params:
-            desc += ' ' + ' '.join(f'*<{p["name"]}>*' for p in params)
-
-        desc += f": {description}"
         self.description = desc
 
     async def show_usage(self, message, error=False):
         desc = self.description + '\n'
 
         if self.params:
-            desc += '\n'.join(f'*{p["name"]}*: {p["desc"]}' for p in self.params)
+            desc = '\n\n'.join(f'**{settings.PREFIX}{p["usage"]}**\n{p["desc"]}' for p in self.params)
 
         embed = discord.Embed(
-            title=settings.PREFIX + self.name,
+            title=type(self).__name__,
             description=desc,
             color=discord.Color.green() if not error else discord.Color.red()
         )

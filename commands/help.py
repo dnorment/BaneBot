@@ -8,9 +8,9 @@ class Help(Command):
     """Show the usage of a command"""
 
     def __init__(self):
-        description = f'Shows the usage of *{settings.PREFIX}command*'
+        description = f'Shows the usage of a command'
         params = [
-            {'name': 'command', 'desc': 'Command for which to show usage'}
+            {'usage': 'help `<command>`', 'desc': 'Show the usage of `command`, see `!commands` for valid commands'}
         ]
         super().__init__(description, params)
 
@@ -27,4 +27,3 @@ class Help(Command):
                 await COMMAND_HANDLERS['commands'].handle(params, message, client, error=True)
         except ArgumentNumberError:
             await super().show_usage(message, error=True)
-            return

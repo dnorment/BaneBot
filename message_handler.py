@@ -4,11 +4,12 @@ import settings
 from commands.command import Command
 
 # import all classes inside the commands package, using __all__ defined in __init__.py
+from commands import *
 
 logger = logging.getLogger('message_handler')
 
 # register all available commands as {name: class}
-COMMAND_HANDLERS = {c.__name__.lower(): c for c in Command.__subclasses__()}
+COMMAND_HANDLERS = {c.__name__.lower(): c() for c in Command.__subclasses__()}
 
 
 async def handle_message(message, client):
@@ -21,7 +22,7 @@ async def handle_message(message, client):
         await handle_command(cmd_split[0].lower(), cmd_split[1:], message, client)
 
 
-async def handle_command(command, args, message, bot_client):
+async def handle_command(command, args, message, client):
     if command not in COMMAND_HANDLERS:
         return
 
@@ -29,4 +30,4 @@ async def handle_command(command, args, message, bot_client):
         f"{message.author.name}#{message.author.discriminator}: {settings.PREFIX}{command} " + " ".join(args))
 
     cmd_obj = COMMAND_HANDLERS[command]
-    await cmd_obj.handle(args, message, bot_client)
+    await cmd_obj.handle(args, message, client)
