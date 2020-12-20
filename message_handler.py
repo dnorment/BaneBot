@@ -1,9 +1,9 @@
 import logging
-import settings
 
+import settings
 from commands.command import Command
+
 # import all classes inside the commands package, using __all__ defined in __init__.py
-from commands import *
 
 logger = logging.getLogger('message_handler')
 

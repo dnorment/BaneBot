@@ -3,7 +3,9 @@ import logging
 import discord
 
 import message_handler
+import reaction_handler
 import settings
+from karma_handler import KarmaHandler
 
 logging.basicConfig(level=logging.INFO,
                     format='[%(asctime)s][%(name)s][%(levelname)s] %(message)s',
@@ -14,7 +16,7 @@ logger = logging.getLogger('bane')
 
 def main():
     logger.info('Starting bot')
-    client = discord.Client()
+    client = discord.Client(intents=discord.Intents.default())
 
     @client.event
     async def on_ready():
@@ -28,6 +30,13 @@ def main():
     async def on_message(message):
         await message_handler.handle_message(message, client)
 
+    @client.event
+    async def on_raw_reaction_add(payload):
+        await reaction_handler.handle_reaction(payload, client)
+
+    @client.event
+    async def on_raw_reaction_remove(payload):
+        await reaction_handler.handle_reaction(payload, client)
 
     client.run(settings.BOT_TOKEN)
 
