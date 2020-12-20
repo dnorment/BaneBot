@@ -26,13 +26,8 @@ def main():
 
     @client.event
     async def on_message(message):
-        await handle_message(message)
+        await message_handler.handle_message(message, client)
 
-    async def handle_message(message):
-        if message.content.startswith(settings.PREFIX) and message.content != settings.PREFIX:
-            cmd_split = message.content[len(settings.PREFIX):].split()
-
-            await message_handler.handle_command(cmd_split[0].lower(), cmd_split[1:], message, client)
 
     client.run(settings.BOT_TOKEN)
 
