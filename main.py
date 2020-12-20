@@ -31,11 +31,8 @@ def main():
     async def handle_message(message):
         if message.content.startswith(settings.PREFIX) and message.content != settings.PREFIX:
             cmd_split = message.content[len(settings.PREFIX):].split()
-            try:
-                await message_handler.handle_command(cmd_split[0].lower(), cmd_split[1:], message, client)
-            except:
-                logger.error('Error while handling message')
-                raise
+
+            await message_handler.handle_command(cmd_split[0].lower(), cmd_split[1:], message, client)
 
     client.run(settings.BOT_TOKEN)
 
