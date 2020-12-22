@@ -1,3 +1,4 @@
+import datetime
 import logging
 
 import pymongo
@@ -40,6 +41,10 @@ class KarmaHandler:
         message = await channel.fetch_message(payload.message_id)
         author_id = message.author.id
 
+        # skip messages older than 24h
+        if datetime.datetime.now() - datetime.timedelta(days=1) >= message.created_at:
+            return
+
         # skip voting on self
         if payload.user_id == author_id:
             return
@@ -70,3 +75,20 @@ class KarmaHandler:
         author = client.get_user(author_id)
         guild = client.get_guild(payload.guild_id)
         logger.info(f'{guild.name}: {user.name}#{user.discriminator} - {voted} - {author.name}#{author.discriminator}')
+
+    @classmethod
+    async def get_karma(cls, user_id, guild_id):
+        user_doc = cls.karma_collection.find_one({
+            'guild': str(guild_id),
+            'user': str(user_id)
+        })
+
+        try:
+            return user_doc['karma']
+        except (AttributeError, KeyError):
+            return 0
+
+    @classmethod
+    async def get_leaderboard(cls, message, client):
+        karma_docs = cls.karma_collection.find({'guild': str(message.guild.id)})
+        return sorted(karma_docs, key=lambda item: item['karma'], reverse=True)
