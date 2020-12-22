@@ -51,7 +51,7 @@ class Karma(Command):
                             user = client.get_user(user_doc['user'])
                             if user is None:
                                 user = await client.fetch_user(user_doc['user'])
-                            icon = ['🥇', '🥉', '🥈', '🐝']
+                            icon = ['🥇', '🥈', '🥉', '🐝']
                             desc += f'`{i + 1:02d}.` {icon[i] if i < 3 else icon[3]} `{user_doc["karma"]:4d}` ' \
                                     f'{user.name}#{user.discriminator}\n'
                         await message.channel.send(

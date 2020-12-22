@@ -5,7 +5,9 @@ import discord
 import message_handler
 import reaction_handler
 import settings
-from karma_handler import KarmaHandler
+
+discord_logger = logging.getLogger('discord')
+discord_logger.setLevel(logging.WARN)
 
 logging.basicConfig(level=logging.INFO,
                     format='[%(asctime)s][%(name)s][%(levelname)s] %(message)s',
