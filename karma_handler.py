@@ -89,6 +89,25 @@ class KarmaHandler:
             return 0
 
     @classmethod
+    async def toggle_ignore_user(cls, user_id, guild_id):
+        user_doc = cls.karma_collection.find_one({
+            'guild': str(guild_id),
+            'user': str(user_id)
+        })
+
+        ignored = False
+        try:
+            ignored = user_doc['ignored']
+        except (AttributeError, KeyError):
+            pass
+
+        cls.karma_collection.find_one_and_update(
+            {'guild': str(guild_id),
+             'user': str(user_id)},
+            {'$set': {'ignored': not ignored}},
+            upsert=True
+        )
+    @classmethod
     async def get_leaderboard(cls, message, client):
         karma_docs = cls.karma_collection.find({'guild': str(message.guild.id)})
         return sorted(karma_docs, key=lambda item: item['karma'], reverse=True)

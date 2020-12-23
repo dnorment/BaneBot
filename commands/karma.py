@@ -60,6 +60,10 @@ class Karma(Command):
                                 color=discord.Color.green()
                             ).set_author(name=f'Top karma for {message.guild.name}', icon_url=message.guild.icon_url)
                         )
+            elif len(params) == 2:
+                # ignore user
+                if len(message.mentions) == 1:
+                    await KarmaHandler.toggle_ignore_user(message.mentions[0].id, message.guild.id)
                 else:
                     raise ValueError
             else:
