@@ -27,7 +27,7 @@ class KarmaHandler:
         })
         try:
             return user_doc['ignored'] is not None and user_doc['ignored']
-        except (AttributeError, KeyError):
+        except (AttributeError, KeyError, TypeError):
             return False
 
     @classmethod
@@ -43,6 +43,10 @@ class KarmaHandler:
 
         # skip messages older than 24h
         if datetime.datetime.now() - datetime.timedelta(days=1) >= message.created_at:
+            return
+
+        # skip voting on bane
+        if client.user.id == author_id:
             return
 
         # skip voting on self
@@ -85,7 +89,7 @@ class KarmaHandler:
 
         try:
             return user_doc['karma']
-        except (AttributeError, KeyError):
+        except (AttributeError, KeyError, TypeError):
             return 0
 
     @classmethod
@@ -98,7 +102,7 @@ class KarmaHandler:
         ignored = False
         try:
             ignored = user_doc['ignored']
-        except (AttributeError, KeyError):
+        except (AttributeError, KeyError, TypeError):
             pass
 
         cls.karma_collection.find_one_and_update(
@@ -107,7 +111,20 @@ class KarmaHandler:
             {'$set': {'ignored': not ignored}},
             upsert=True
         )
+
     @classmethod
-    async def get_leaderboard(cls, message, client):
+    async def get_leaderboard(cls, message):
         karma_docs = cls.karma_collection.find({'guild': str(message.guild.id)})
         return sorted(karma_docs, key=lambda item: item['karma'], reverse=True)
+
+    @classmethod
+    async def set_reaction(cls, emoji, guild, vote_type):
+        id_or_codepoint = str(emoji.id) if type(emoji) != str else emoji
+
+        cls.reaction_collection.find_one_and_update(
+            {'guild': str(guild.id)},
+            {'$set': {vote_type: id_or_codepoint}},
+            upsert=True
+        )
+
+        logger.info(f'{guild.name}: Set {vote_type} reaction as {id_or_codepoint}')

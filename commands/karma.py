@@ -1,3 +1,4 @@
+import asyncio
 import discord
 
 from commands.command import Command
@@ -45,7 +46,7 @@ class Karma(Command):
                     )
                 elif params[0] == 'leaderboard':
                     # show karma leaderboard
-                    if len(karma_list := await KarmaHandler.get_leaderboard(message, client)) >= 1:
+                    if len(karma_list := await KarmaHandler.get_leaderboard(message)) >= 1:
                         desc = ''
                         for i, user_doc in enumerate(karma_list):
                             user = client.get_user(user_doc['user'])
@@ -60,6 +61,61 @@ class Karma(Command):
                                 color=discord.Color.green()
                             ).set_author(name=f'Top karma for {message.guild.name}', icon_url=message.guild.icon_url)
                         )
+                elif params[0] == 'setreactions':
+                    # set karma reactions
+                    embed_message = await message.channel.send(
+                        embed=discord.Embed(
+                            description='React to this message with the emoji/emote you want as the upvote reaction',
+                            color=discord.Color.orange()
+                        ).set_footer(text='Skipping in 30 seconds...')
+                    )
+
+                    upvote = downvote = None
+
+                    def is_author(reaction, reacting_user):
+                        return reacting_user == message.author
+
+                    try:
+                        reaction, user = await client.wait_for('reaction_add', timeout=30, check=is_author)
+                        await KarmaHandler.set_reaction(reaction.emoji, message.guild, 'upvote')
+                        upvote = reaction
+                    except asyncio.TimeoutError:
+                        pass
+
+                    await embed_message.edit(
+                        embed=discord.Embed(
+                            description='React to this message with the emoji/emote you want as the downvote reaction',
+                            color=discord.Color.blue()
+                        ).set_footer(text='Skipping in 30 seconds...')
+                    )
+
+                    try:
+                        reaction, user = await client.wait_for('reaction_add', timeout=30, check=is_author)
+                        await KarmaHandler.set_reaction(reaction.emoji, message.guild, 'downvote')
+                        downvote = reaction
+                    except asyncio.TimeoutError:
+                        pass
+
+                    await embed_message.clear_reactions()
+
+                    desc = ''
+                    if upvote is not None:
+                        desc = f'Upvote: {upvote.emoji if type(upvote) != str else upvote}\n'
+                    if downvote is not None:
+                        desc += f'Downvote: {downvote.emoji if type(downvote) != str else downvote}'
+
+                    if upvote is not None or downvote is not None:
+                        await embed_message.edit(
+                            embed=discord.Embed(
+                                title='Set reactions',
+                                description=desc,  # TODO return successfully chosen reactions
+                                color=discord.Color.green()
+                            )
+                        )
+                    else:
+                        await embed_message.delete()
+                else:
+                    raise ValueError
             elif len(params) == 2:
                 # ignore user
                 if len(message.mentions) == 1:
