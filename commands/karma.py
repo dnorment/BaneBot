@@ -75,7 +75,7 @@ class Karma(Command):
 
                     upvote = downvote = None
 
-                    def is_author(reaction, reacting_user):
+                    def is_author(_, reacting_user):
                         return reacting_user == message.author
 
                     try:
@@ -125,7 +125,23 @@ class Karma(Command):
 
                 # ignore user
                 if len(message.mentions) == 1:
-                    await KarmaHandler.toggle_ignore_user(message.mentions[0].id, message.guild.id)
+                    mentioned_user = message.mentions[0]
+
+                    if mentioned_user == client.user:
+                        await message.channel.send(
+                            embed=discord.Embed(
+                                description='The fire rises.',
+                                color=discord.Color.red()
+                            )
+                        )
+                    else:
+                        await KarmaHandler.toggle_ignore_user(mentioned_user, message.guild)
+                        await message.channel.send(
+                            embed=discord.Embed(
+                                description=f'Toggled ignore of {mentioned_user.name}#{mentioned_user.discriminator}',
+                                color=discord.Color.green()
+                            )
+                        )
                 else:
                     raise ValueError
             else:
@@ -135,6 +151,7 @@ class Karma(Command):
         except PermissionError:
             await message.channel.send(
                 embed=discord.Embed(
-                    description='This function is only available for server administrators'
+                    description='This function is only available for server administrators',
+                    color=discord.Color.red()
                 )
             )

@@ -76,8 +76,14 @@ class KarmaHandler:
 
         # get names for logging
         user = client.get_user(payload.user_id)
+        if user is None:
+            user = await client.fetch_user(payload.user_id)
         author = client.get_user(author_id)
+        if author is None:
+            author = await client.fetch_user(author_id)
         guild = client.get_guild(payload.guild_id)
+        if guild is None:
+            guild = await client.fetch_guild(payload.guild_id)
         logger.info(f'{guild.name}: {user.name}#{user.discriminator} - {voted} - {author.name}#{author.discriminator}')
 
     @classmethod
@@ -93,10 +99,10 @@ class KarmaHandler:
             return 0
 
     @classmethod
-    async def toggle_ignore_user(cls, user_id, guild_id):
+    async def toggle_ignore_user(cls, user, guild):
         user_doc = cls.karma_collection.find_one({
-            'guild': str(guild_id),
-            'user': str(user_id)
+            'guild': str(guild.id),
+            'user': str(user.id)
         })
 
         ignored = False
@@ -106,11 +112,13 @@ class KarmaHandler:
             pass
 
         cls.karma_collection.find_one_and_update(
-            {'guild': str(guild_id),
-             'user': str(user_id)},
+            {'guild': str(guild.id),
+             'user': str(user.id)},
             {'$set': {'ignored': not ignored}},
             upsert=True
         )
+
+        logger.info(f'{guild.name}: Toggled ignore of {user.name}#{user.discriminator}')
 
     @classmethod
     async def get_leaderboard(cls, message):
@@ -127,4 +135,4 @@ class KarmaHandler:
             upsert=True
         )
 
-        logger.info(f'{guild.name}: Set {vote_type} reaction as {id_or_codepoint}')
+        logger.info(f'{guild.name}: Set {vote_type} reaction as :{emoji.name}:')
