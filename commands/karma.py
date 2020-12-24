@@ -62,6 +62,9 @@ class Karma(Command):
                             ).set_author(name=f'Top karma for {message.guild.name}', icon_url=message.guild.icon_url)
                         )
                 elif params[0] == 'setreactions':
+                    if not message.channel.permissions_for(message.author).administrator:
+                        raise PermissionError
+
                     # set karma reactions
                     embed_message = await message.channel.send(
                         embed=discord.Embed(
@@ -108,7 +111,7 @@ class Karma(Command):
                         await embed_message.edit(
                             embed=discord.Embed(
                                 title='Set reactions',
-                                description=desc,  # TODO return successfully chosen reactions
+                                description=desc,
                                 color=discord.Color.green()
                             )
                         )
@@ -117,6 +120,9 @@ class Karma(Command):
                 else:
                     raise ValueError
             elif len(params) == 2:
+                if not message.channel.permissions_for(message.author).administrator:
+                    raise PermissionError
+
                 # ignore user
                 if len(message.mentions) == 1:
                     await KarmaHandler.toggle_ignore_user(message.mentions[0].id, message.guild.id)
@@ -126,3 +132,9 @@ class Karma(Command):
                 raise ArgumentNumberError
         except (ArgumentNumberError, ValueError):
             await super().show_usage(message, error=True)
+        except PermissionError:
+            await message.channel.send(
+                embed=discord.Embed(
+                    description='This function is only available for server administrators'
+                )
+            )
