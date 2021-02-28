@@ -32,9 +32,6 @@ class KarmaHandler:
 
     @classmethod
     async def handle_reaction(cls, payload, client):
-        # skip ignored users
-        if cls.is_ignored_user(payload.user_id, payload.guild_id):
-            return
 
         # find author of message
         channel = client.get_channel(payload.channel_id)
