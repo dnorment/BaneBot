@@ -1,5 +1,3 @@
-import settings
-
 from commands.command import Command
 from exceptions import ArgumentNumberError
 
