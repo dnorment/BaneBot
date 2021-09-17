@@ -1,9 +1,13 @@
 import asyncio
+import logging
+
 import discord
 
 from commands.command import Command
 from exceptions import ArgumentNumberError
 from karma_handler import KarmaHandler
+
+logger = logging.getLogger('karma_handler')
 
 
 class Karma(Command):
@@ -49,9 +53,15 @@ class Karma(Command):
                     if len(karma_list := await KarmaHandler.get_leaderboard(message)) >= 1:
                         desc = ''
                         for i, user_doc in enumerate(karma_list):
-                            user = client.get_user(user_doc['user'])
+                            user_id = user_doc['user']
+                            user = client.get_user(user_id)
                             if user is None:
-                                user = await client.fetch_user(user_doc['user'])
+                                try:
+                                    user = await client.fetch_user(user_id)
+                                except discord.errors.NotFound:
+                                    logger.warn(f'User {user_id} not found in guild {message.guild.id}, deleting their document')
+                                    await KarmaHandler.remove_user(user_id, message.guild.id)
+                                    continue
                             icon = ['🥇', '🥈', '🥉', '🐝']
                             desc += f'`{i + 1:02d}.` {icon[i] if i < 3 else icon[3]} `{user_doc["karma"]:4d}` ' \
                                     f'{user.name}#{user.discriminator}\n'

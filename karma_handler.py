@@ -105,11 +105,10 @@ class KarmaHandler:
             'user': str(user.id)
         })
 
-        ignored = False
         try:
             ignored = user_doc['ignored']
         except (AttributeError, KeyError, TypeError):
-            pass
+            ignored = False
 
         cls.karma_collection.find_one_and_update(
             {'guild': str(guild.id),
@@ -119,6 +118,16 @@ class KarmaHandler:
         )
 
         logger.info(f'{guild.name}: Toggled ignore of {user.name}#{user.discriminator}')
+    
+    @classmethod
+    async def remove_user(cls, user_id, guild_id):
+        cls.karma_collection.remove({
+            'guild': str(guild_id),
+            'user': str(user_id)
+        })
+
+        logger.info(f'Guild {guild_id}: Removed user {user_id} from collection')
+    
 
     @classmethod
     async def get_leaderboard(cls, message):
