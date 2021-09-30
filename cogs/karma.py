@@ -50,10 +50,11 @@ class Karma(commands.Cog):
                         # add name to document
                         self._karma.find_one_and_update(
                             {'guild': str(ctx.guild_id),
-                            'user': str(user.id)},
+                             'user': str(user.id)},
                             {'$set': {'name': user_name}}
                         )
-                        logger.info(f'{ctx.guild.name}: Added {user_name}\'s name to their document')
+                        logger.info(
+                            f'{ctx.guild.name}: Added {user_name}\'s name to their document')
                     except discord.errors.NotFound:
                         logger.warn(
                             f'{ctx.guild.name}: User {user_id} not found in guild, deleting their document')

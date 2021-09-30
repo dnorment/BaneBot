@@ -1,2 +1,2 @@
 git+https://github.com/Pycord-Development/pycord@feature/slash
-pymongo
+pymongo[srv]

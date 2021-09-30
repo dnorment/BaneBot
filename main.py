@@ -18,6 +18,7 @@ def main():
 
     logger.info('Loading extensions')
 
+    bot.load_extension('cogs.command_error')
     bot.load_extension('cogs.karma')
     bot.load_extension('cogs.uptime')
 
