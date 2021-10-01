@@ -2,7 +2,6 @@ import logging
 from datetime import datetime
 
 import settings
-
 from discord.app.commands import slash_command
 from discord.app.context import ApplicationContext
 from discord.colour import Color

@@ -1,10 +1,9 @@
 import datetime
 import logging
 
-import settings
-
 import discord
 import pymongo
+import settings
 from discord import Embed, User
 from discord.app.commands import slash_command, user_command
 from discord.app.context import ApplicationContext

@@ -2,7 +2,9 @@ import logging
 
 import discord
 from discord.ext import commands
+
 import settings
+from cogs import cog_names
 
 logging.getLogger('discord').setLevel(logging.WARN)
 logging.basicConfig(level=logging.INFO,
@@ -17,10 +19,8 @@ def main():
     bot = commands.Bot(command_prefix='!', intents=discord.Intents.default())
 
     logger.info('Loading extensions')
-
-    bot.load_extension('cogs.command_error')
-    bot.load_extension('cogs.karma')
-    bot.load_extension('cogs.uptime')
+    for cog in cog_names:
+        bot.load_extension(f'cogs.{cog}')
 
     bot.run(settings.BOT_TOKEN)
 
