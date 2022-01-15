@@ -61,7 +61,7 @@ class Karma(commands.Cog):
                         continue
 
                 icon = ['🥇', '🥈', '🥉', '🐝']
-                desc += f'`{i + 1:02d}.` {icon[i] if i < 3 else icon[3]} `{user_doc["karma"]:4d}` ' \
+                desc += f'`{i + 1:02d}.` {icon[min(i, 3)]} `{user_doc["karma"]:5d}` ' \
                         f'{user_name}\n'
 
             await ctx.respond(
@@ -76,7 +76,7 @@ class Karma(commands.Cog):
             f'{ctx.guild.name}: Showing leaderboard to {ctx.author.name}#{ctx.author.discriminator}')
 
     @user_command(name='Get karma', guild_ids=settings.GUILD_IDS)
-    async def get_user_karma(self, ctx: ApplicationContext, user: User):
+    async def get_user_karma(self, ctx: ApplicationContext, user: User) -> int:
         # don't get bot karma
         if user == self.bot.user:
             await ctx.respond(embed=Embed(

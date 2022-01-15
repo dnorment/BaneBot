@@ -1,8 +1,9 @@
 from os import listdir
 from os.path import basename, dirname
+from typing import List
 
 # list all names of cogs
-cog_names: list[str] = []
+cog_names: List[str] = []
 for f in listdir(dirname(__file__), ):
     is_file = '.' in basename(f)
     is_top_level = is_file and basename(f).count('.') == 1
