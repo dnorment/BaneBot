@@ -1,15 +1,12 @@
 import datetime
 import logging
 
-import discord
 import pymongo
 import settings
-from discord import Embed, User
-from discord.app.commands import slash_command, user_command
-from discord.app.context import ApplicationContext
-from discord.colour import Color
-from discord.ext import commands
-from discord.raw_models import RawReactionActionEvent
+from disnake import (ApplicationCommandInteraction, Color, Embed,
+                     RawReactionActionEvent, User)
+from disnake.errors import NotFound
+from disnake.ext import commands
 
 logger = logging.getLogger('cogs.karma')
 
@@ -29,8 +26,8 @@ class Karma(commands.Cog):
     async def on_raw_reaction_remove(self, payload: RawReactionActionEvent):
         await self.handle_reaction_event(payload)
 
-    @slash_command(description='Shows leaderboard', guild_ids=settings.GUILD_IDS)
-    async def leaderboard(self, ctx: ApplicationContext):
+    @commands.slash_command(description='Shows leaderboard', guild_ids=settings.GUILD_IDS)
+    async def leaderboard(self, ctx: ApplicationCommandInteraction):
         karma_list = await self.get_leaderboard_docs(ctx.guild_id)
 
         if karma_list:
@@ -54,7 +51,7 @@ class Karma(commands.Cog):
                         )
                         logger.info(
                             f'{ctx.guild.name}: Added {user_name}\'s name to their document')
-                    except discord.errors.NotFound:
+                    except NotFound:
                         logger.warn(
                             f'{ctx.guild.name}: User {user_id} not found in guild, deleting their document')
                         await self.remove_user(user_id, ctx.guild.id)
@@ -64,7 +61,7 @@ class Karma(commands.Cog):
                 desc += f'`{i + 1:02d}.` {icon[min(i, 3)]} `{user_doc["karma"]:5d}` ' \
                         f'{user_name}\n'
 
-            await ctx.respond(
+            await ctx.send(
                 embed=Embed(
                     title=f'Top karma for {ctx.guild.name}',
                     description=desc,
@@ -75,14 +72,16 @@ class Karma(commands.Cog):
         logger.info(
             f'{ctx.guild.name}: Showing leaderboard to {ctx.author.name}#{ctx.author.discriminator}')
 
-    @user_command(name='Get karma', guild_ids=settings.GUILD_IDS)
-    async def get_user_karma(self, ctx: ApplicationContext, user: User) -> int:
+    @commands.user_command(name='Get karma', guild_ids=settings.GUILD_IDS)
+    async def get_user_karma(self, ctx: ApplicationCommandInteraction, user: User) -> int:
         # don't get bot karma
-        if user == self.bot.user:
-            await ctx.respond(embed=Embed(
+        if user == self.bot.user or user.bot:
+            await ctx.send(embed=Embed(
                 title='The fire rises.',
                 color=Color.red()
             ).set_thumbnail(url=self.bot.user.display_avatar.url), ephemeral=True)
+            logger.info(
+                f'{ctx.guild.name}: {ctx.author.name}#{ctx.author.discriminator} reacted to a bot, ignoring')
             return
 
         user_doc = self._karma.find_one({
@@ -95,7 +94,7 @@ class Karma(commands.Cog):
         except (AttributeError, KeyError, TypeError):
             karma = 0
 
-        await ctx.respond(embed=Embed(
+        await ctx.send(embed=Embed(
             title=f'{user.name}#{user.discriminator}',
             color=Color.green()
         ).add_field(name='Karma', value=karma).set_thumbnail(url=user.display_avatar.url))
@@ -104,25 +103,27 @@ class Karma(commands.Cog):
             f'{ctx.guild.name}: {ctx.author.name}#{ctx.author.discriminator} got {user.name}#{user.discriminator}\'s karma')
 
     async def handle_reaction_event(self, payload: RawReactionActionEvent):
+        channel = self.bot.get_channel(payload.channel_id)
+        message = await channel.fetch_message(payload.message_id)
+        guild = channel.guild
+
+        # skip messages older than 24h
+        now_timestamp = datetime.datetime.now().timestamp()
+        seconds_in_24h = datetime.timedelta(days=1).total_seconds()
+        timestamp_24h_ago = now_timestamp - seconds_in_24h
+        if timestamp_24h_ago >= message.created_at.timestamp():
+            return
+
         # skip ignored users
         if await self.is_ignored_user(payload.user_id, payload.guild_id):
             return
 
-        # find author of message
-        channel = self.bot.get_channel(payload.channel_id)
-        message = await channel.fetch_message(payload.message_id)
-        author_id = message.author.id
-
-        # skip messages older than 24h
-        if datetime.datetime.now().timestamp() - datetime.timedelta(days=1).total_seconds() >= message.created_at.timestamp():
+        # skip voting on all bots
+        if message.author.bot:
             return
 
-        # skip voting on bane
-        if self.bot.user == message.author:
-            return
-
-        # skip voting on self
-        if payload.user_id == author_id:
+        # skip users reacting to themselves
+        if payload.user_id == message.author.id:
             return
 
         # get upvote/downvote
@@ -141,7 +142,7 @@ class Karma(commands.Cog):
         # update author's karma
         self._karma.find_one_and_update(
             {'guild': str(payload.guild_id),
-             'user': str(author_id)},
+             'user': str(message.author.id)},
             {'$inc': {'karma': vote_direction},
              '$set': {'name': f'{message.author.name}#{message.author.discriminator}'}},
             upsert=True
@@ -149,7 +150,7 @@ class Karma(commands.Cog):
 
         # get name for logging
         user = self.bot.get_user(payload.user_id)
-        if user is None:
+        if not user:
             user = await self.bot.fetch_user(payload.user_id)
 
         logger.info(

@@ -1,14 +1,13 @@
 import logging
 
-import discord
-from discord.ext import commands
+from disnake.ext import commands
 
 import settings
 from cogs import cog_names
 
 logging.getLogger('discord').setLevel(logging.WARN)
 logging.basicConfig(level=logging.INFO,
-                    format='[%(asctime)s][%(name)s][%(levelname)s] %(message)s',
+                    format='[%(asctime)s UTC][%(name)s][%(levelname)s] %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S')
 
 logger = logging.getLogger('main')
@@ -16,7 +15,7 @@ logger = logging.getLogger('main')
 
 def main():
     logger.info('Starting bot')
-    bot = commands.Bot(command_prefix='!', intents=discord.Intents.default())
+    bot = commands.Bot()
 
     logger.info('Loading extensions')
     for cog in cog_names:

@@ -2,11 +2,8 @@ import logging
 from datetime import datetime
 
 import settings
-from discord.app.commands import slash_command
-from discord.app.context import ApplicationContext
-from discord.colour import Color
-from discord.embeds import Embed
-from discord.ext import commands
+from disnake import ApplicationCommandInteraction, Color, Embed
+from disnake.ext import commands
 
 logger = logging.getLogger('cogs.uptime')
 
@@ -17,8 +14,8 @@ class Uptime(commands.Cog):
         self.start_time = datetime.now()
         logger.info('Initialized cog')
 
-    @slash_command(description='Shows bot uptime', guild_ids=settings.GUILD_IDS)
-    async def uptime(self, ctx: ApplicationContext):
+    @commands.slash_command(description='Shows bot uptime', guild_ids=settings.GUILD_IDS)
+    async def uptime(self, ctx: ApplicationCommandInteraction):
         end_time = datetime.now()
         diff = end_time - self.start_time
         seconds = diff.seconds % 60
@@ -27,7 +24,7 @@ class Uptime(commands.Cog):
         days = diff.days
         uptime_str = f'{days} days, {hours} hours, {minutes} minutes, {seconds} seconds'
 
-        await ctx.respond(embed=Embed(
+        await ctx.send(embed=Embed(
             title='Uptime',
             description=uptime_str,
             color=Color.green()
