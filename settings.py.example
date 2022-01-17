@@ -1,0 +1,10 @@
+# Bot settings
+
+# Login token for bot
+BOT_TOKEN = ''
+
+# Guild IDs for instant application command update
+GUILD_IDS = []
+
+# MongoDB URI
+MONGO_URI = ''
