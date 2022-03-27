@@ -2,6 +2,7 @@ import datetime
 import logging
 
 import pymongo
+import disnake
 import settings
 from disnake import (ApplicationCommandInteraction, Color, Embed,
                      RawReactionActionEvent, User)
@@ -104,6 +105,10 @@ class Karma(commands.Cog):
 
     async def handle_reaction_event(self, payload: RawReactionActionEvent):
         channel = self.bot.get_channel(payload.channel_id)
+
+        # only handle in a guild
+        if not channel or isinstance(channel, disnake.abc.PrivateChannel):
+            return
         message = await channel.fetch_message(payload.message_id)
         guild = channel.guild
 

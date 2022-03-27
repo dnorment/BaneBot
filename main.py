@@ -5,9 +5,9 @@ from disnake.ext import commands
 import settings
 from cogs import cog_names
 
-logging.getLogger('discord').setLevel(logging.WARN)
+logging.getLogger('disnake.gateway').setLevel(logging.WARN)
 logging.basicConfig(level=logging.INFO,
-                    format='[%(asctime)s UTC][%(name)s][%(levelname)s] %(message)s',
+                    format='[%(asctime)s][%(name)s][%(levelname)s] %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S')
 
 logger = logging.getLogger('main')
