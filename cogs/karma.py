@@ -27,7 +27,11 @@ class Karma(commands.Cog):
     async def on_raw_reaction_remove(self, payload: RawReactionActionEvent):
         await self.handle_reaction_event(payload)
 
-    @commands.slash_command(description='Shows leaderboard', guild_ids=settings.GUILD_IDS)
+    @commands.slash_command(guild_ids=settings.GUILD_IDS)
+    async def karma(self, inter: ApplicationCommandInteraction):
+        pass
+
+    @karma.sub_command(description='Shows leaderboard')
     async def leaderboard(self, ctx: ApplicationCommandInteraction):
         karma_list = await self.get_leaderboard_docs(ctx.guild_id)
 
