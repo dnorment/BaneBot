@@ -1,3 +1,4 @@
 disnake
 pymongo
 dnspython
+yfinance
