@@ -1,13 +1,15 @@
 import datetime
 import logging
 
-import pymongo
 import disnake
+import pymongo
 import settings
 from disnake import (ApplicationCommandInteraction, Color, Embed,
                      RawReactionActionEvent, User)
 from disnake.errors import NotFound
 from disnake.ext import commands
+
+from cogs.bank import Bank
 
 logger = logging.getLogger('cogs.karma')
 
@@ -152,6 +154,15 @@ class Karma(commands.Cog):
              '$set': {'name': f'{message.author.name}#{message.author.discriminator}'}},
             upsert=True
         )
+
+        # reflect changes in bank
+        bank: Bank = self.bot.get_cog('Bank')
+        if bank:
+            REWARD_AMT = 10
+            if vote_direction == 1:
+                bank.add(message.author.id, REWARD_AMT)
+            else:
+                bank.sub(message.author.id, REWARD_AMT)
 
         # get name for logging
         user = self.bot.get_user(payload.user_id)
