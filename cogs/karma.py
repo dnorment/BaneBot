@@ -163,10 +163,11 @@ class Karma(commands.Cog):
         bank: Bank = self.bot.get_cog('Bank')
         if bank:
             REWARD_AMT = 10
+            PENALTY_AMT = 5
             if vote_direction == 1:
                 bank.add(message.author.id, REWARD_AMT)
             else:
-                bank.sub(message.author.id, REWARD_AMT)
+                bank.sub(message.author.id, PENALTY_AMT)
 
         # get name for logging
         user = self.bot.get_user(payload.user_id)

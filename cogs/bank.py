@@ -61,7 +61,7 @@ class Bank(commands.Cog):
 
         price = asset.info['regularMarketPrice']
         if not price:
-            await inter.send('Source is missing data (invalid ticker?)')
+            await inter.send('Source is missing `regularMarketPrice` (invalid ticker?)')
             return
 
         price = round(price, 2)
@@ -106,12 +106,13 @@ class Bank(commands.Cog):
         return True
 
     def _get_balance(self, user_id: int) -> float:
+        STARTING_BALANCE = 100
         balance = self._db.execute(
             'SELECT balance FROM BANK WHERE user_id = ?', (user_id,)
         ).fetchone()
         if not balance:
             self._insert_user(user_id)
-            return 0
+            return STARTING_BALANCE
         return balance[0]
 
     def _add(self, user_id: int, amount: float):
