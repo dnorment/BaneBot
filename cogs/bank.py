@@ -44,23 +44,24 @@ class Bank(commands.Cog):
         await inter.response.defer()
 
         if amount <= 0:
-            await inter.send('Amount must be greater than 0', ephemeral=True)
+            await inter.send('Amount must be greater than 0')
             return
 
         if ' ' in ticker:
-            await inter.send('Ticker cannot contain spaces', ephemeral=True)
+            await inter.send('Ticker cannot contain spaces')
             return
 
-        logger.info(f'Fetching {ticker.upper()} price')
-        asset = yf.Ticker(ticker.upper())
+        ticker = ticker.upper()
+        logger.info(f'Fetching {ticker} price')
+        asset = yf.Ticker(ticker)
 
         if not asset:
-            await inter.send('Invalid ticker', ephemeral=True)
+            await inter.send('Invalid ticker')
             return
 
         price = asset.info['regularMarketPrice']
         if not price:
-            await inter.send('Source is missing data (invalid ticker?)', ephemeral=True)
+            await inter.send('Source is missing data (invalid ticker?)')
             return
 
         price = round(price, 2)
@@ -69,7 +70,7 @@ class Bank(commands.Cog):
         balance = self._get_balance(user_id)
 
         if balance < total or not self.sub(user_id, total):
-            await inter.send(f'You do not have enough money (${price:.2f} * {amount} = ${total:.2f})', ephemeral=True)
+            await inter.send(f'You do not have enough money (${price:.2f} * {amount} = ${total:.2f})')
             return
 
         with self._db as conn:
