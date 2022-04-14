@@ -2,11 +2,13 @@ import logging
 
 import sqlite3
 import settings
-from disnake import ApplicationCommandInteraction
+from disnake import ApplicationCommandInteraction, Color, Embed
 from disnake.ext import commands
 import yfinance as yf
 
 logger = logging.getLogger('cogs.bank')
+
+STARTING_BALANCE = 100
 
 
 class Bank(commands.Cog):
@@ -24,7 +26,8 @@ class Bank(commands.Cog):
                     user_id INTEGER,
                     ticker TEXT,
                     amount REAL,
-                    buy_price REAL
+                    buy_price REAL,
+                    buy_date TEXT
                 )''')
         logger.info('Initialized cog')
 
@@ -75,7 +78,7 @@ class Bank(commands.Cog):
 
         with self._db as conn:
             conn.execute(
-                'INSERT INTO HOLDINGS (user_id, ticker, amount, buy_price) VALUES (?, ?, ?, ?)',
+                'INSERT INTO HOLDINGS (user_id, ticker, amount, buy_price, buy_date) VALUES (?, ?, ?, ?, datetime("now"))',
                 (user_id, ticker, amount, price)
             )
 
@@ -86,6 +89,31 @@ class Bank(commands.Cog):
     @bank.sub_command(description='Sell an asset')
     async def sell(self, inter: ApplicationCommandInteraction, ticker: str, amount: int):
         await inter.send('Not implemented', ephemeral=True)
+
+    @bank.sub_command(description='Show holdings')
+    async def holdings(self, inter: ApplicationCommandInteraction):
+        user_id = inter.author.id
+        holdings = self._db.execute(
+            'SELECT ticker, amount, buy_price, buy_date FROM HOLDINGS WHERE user_id = ?', (
+                user_id,)
+        ).fetchall()
+        if not holdings:
+            await inter.send('You have no holdings')
+            return
+
+        holding_strs = []
+        for ticker, amount, buy_price, buy_date in holdings:
+            holding_strs.append(
+                f'`{buy_date}: BUY {int(amount):>5d} * {ticker:>10s} @ {buy_price:>4.2f} USD`')
+
+        embed = Embed(
+            title=f'{inter.author.name}\'s Portfolio',
+            description='\n'.join(holding_strs),
+            color=Color.green(),
+        )
+        await inter.send(embed=embed)
+        logger.info(
+            f'{inter.author.name} ({inter.author.id}) checked holdings')
 
     def get_balance(self, user_id: int) -> float:
         return self._get_balance(user_id)
@@ -106,7 +134,6 @@ class Bank(commands.Cog):
         return True
 
     def _get_balance(self, user_id: int) -> float:
-        STARTING_BALANCE = 100
         balance = self._db.execute(
             'SELECT balance FROM BANK WHERE user_id = ?', (user_id,)
         ).fetchone()
@@ -128,7 +155,7 @@ class Bank(commands.Cog):
         with self._db as conn:
             conn.execute(
                 'INSERT INTO BANK (user_id, balance) VALUES (?, ?)',
-                (user_id, 0)
+                (user_id, STARTING_BALANCE)
             )
         logger.info(f'Inserted user {user_id}')
 
