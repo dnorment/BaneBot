@@ -62,27 +62,26 @@ class Bank(commands.Cog):
             await inter.send('Invalid ticker')
             return
 
-        price = asset.info['regularMarketPrice']
-        if not price:
+        buy_price: float = asset.info['regularMarketPrice']
+        if not buy_price:
             await inter.send('Source is missing `regularMarketPrice` (invalid ticker?)')
             return
 
-        price = round(price, 2)
-        total: float = round(price * amount, 2)
+        total: float = buy_price * amount
         user_id = inter.author.id
         balance = self._get_balance(user_id)
 
         if balance < total or not self.sub(user_id, total):
-            await inter.send(f'You do not have enough money (${price:.2f} * {amount} = ${total:.2f})')
+            await inter.send(f'You do not have enough money ({amount} {ticker} = ${total:.2f})')
             return
 
         with self._db as conn:
             conn.execute(
                 'INSERT INTO HOLDINGS (user_id, ticker, amount, buy_price, buy_date) VALUES (?, ?, ?, ?, datetime("now"))',
-                (user_id, ticker, amount, price)
+                (user_id, ticker, amount, buy_price)
             )
 
-        await inter.send(f'Bought {amount} {ticker} for ${total:.2f} (${price:.2f} ea)')
+        await inter.send(f'Bought {amount} {ticker} for ${total:.2f}')
         logger.info(
             f'{user_id} bought {amount} {ticker} for ${total:.2f}')
 
