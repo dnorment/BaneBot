@@ -78,7 +78,7 @@ class Bank(commands.Cog):
         balance = self._get_balance(user_id)
 
         if balance < total or not self.sub(user_id, total):
-            return 'You do not have enough money ({amount} {ticker} = ${total:.2f})'
+            return f'You do not have enough money ({amount} {ticker} = ${total:.2f})'
 
         with BankDB() as cur:
             cur.execute(
