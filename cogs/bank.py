@@ -11,17 +11,31 @@ logger = logging.getLogger('cogs.bank')
 STARTING_BALANCE = 100
 
 
+class BankDB():
+    def __init__(self, file='bank.db'):
+        self.file = file
+
+    def __enter__(self):
+        self.conn = sqlite3.connect(self.file)
+        self.conn.row_factory = sqlite3.Row
+        return self.conn.cursor()
+
+    def __exit__(self, type, value, traceback):
+        self.conn.commit()
+        self.conn.close()
+
+
 class Bank(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self._db = sqlite3.connect('bank.db')
-        with self._db as conn:
-            conn.execute(
+        with BankDB() as cur:
+            cur.execute(
                 '''CREATE TABLE IF NOT EXISTS BANK (
                     user_id INTEGER PRIMARY KEY,
                     balance REAL
                 )''')
-            conn.execute(
+            cur.execute(
                 '''CREATE TABLE IF NOT EXISTS HOLDINGS (
                     user_id INTEGER,
                     ticker TEXT,
@@ -42,48 +56,45 @@ class Bank(commands.Cog):
         logger.info(
             f'{inter.author.name} ({inter.author.id}) checked balance')
 
-    @bank.sub_command(description='Buy an asset')
-    async def buy(self, inter: ApplicationCommandInteraction, ticker: str, amount: int):
-        await inter.response.defer()
-
+    async def _buy(self, user_id: int, ticker: str, amount: float) -> str:
         if amount <= 0:
-            await inter.send('Amount must be greater than 0')
-            return
+            return 'Amount must be greater than 0'
 
         if ' ' in ticker:
-            await inter.send('Ticker cannot contain spaces')
-            return
+            return 'Ticker cannot contain spaces'
 
         ticker = ticker.upper()
         logger.info(f'Fetching {ticker} price')
         asset = yf.Ticker(ticker)
 
         if not asset:
-            await inter.send('Invalid ticker')
-            return
+            return 'Invalid ticker'
 
         buy_price: float = asset.info['regularMarketPrice']
         if not buy_price:
-            await inter.send('Source is missing `regularMarketPrice` (invalid ticker?)')
-            return
+            return 'Source is missing `regularMarketPrice` (invalid ticker?)'
 
         total: float = buy_price * amount
-        user_id = inter.author.id
         balance = self._get_balance(user_id)
 
         if balance < total or not self.sub(user_id, total):
-            await inter.send(f'You do not have enough money ({amount} {ticker} = ${total:.2f})')
-            return
+            return 'You do not have enough money ({amount} {ticker} = ${total:.2f})'
 
-        with self._db as conn:
-            conn.execute(
+        with BankDB() as cur:
+            cur.execute(
                 'INSERT INTO HOLDINGS (user_id, ticker, amount, buy_price, buy_date) VALUES (?, ?, ?, ?, datetime("now"))',
                 (user_id, ticker, amount, buy_price)
             )
 
-        await inter.send(f'Bought {amount} {ticker} for ${total:.2f}')
         logger.info(
             f'{user_id} bought {amount} {ticker} for ${total:.2f}')
+        return f'Bought {amount} {ticker} for ${total:.2f}'
+
+    @bank.sub_command(description='Buy an asset')
+    async def buy(self, inter: ApplicationCommandInteraction, ticker: str, amount: int):
+        await inter.response.defer()
+        res = await self._buy(inter.author.id, ticker, amount)
+        await inter.send(res)
 
     @bank.sub_command(description='Sell an asset')
     async def sell(self, inter: ApplicationCommandInteraction, ticker: str, amount: int):
@@ -92,10 +103,11 @@ class Bank(commands.Cog):
     @bank.sub_command(description='Show holdings')
     async def holdings(self, inter: ApplicationCommandInteraction):
         user_id = inter.author.id
-        holdings = self._db.execute(
-            'SELECT ticker, amount, buy_price, buy_date FROM HOLDINGS WHERE user_id = ?', (
-                user_id,)
-        ).fetchall()
+        with BankDB() as cur:
+            holdings = cur.execute(
+                'SELECT ticker, amount, buy_price, buy_date FROM HOLDINGS WHERE user_id = ?', (
+                    user_id,)
+            ).fetchall()
         if not holdings:
             await inter.send('You have no holdings')
             return
@@ -133,9 +145,10 @@ class Bank(commands.Cog):
         return True
 
     def _get_balance(self, user_id: int) -> float:
-        balance = self._db.execute(
-            'SELECT balance FROM BANK WHERE user_id = ?', (user_id,)
-        ).fetchone()
+        with BankDB() as cur:
+            balance = cur.execute(
+                'SELECT balance FROM BANK WHERE user_id = ?', (user_id,)
+            ).fetchone()
         if not balance:
             self._insert_user(user_id)
             return STARTING_BALANCE
@@ -144,23 +157,19 @@ class Bank(commands.Cog):
     def _add(self, user_id: int, amount: float):
         amount = round(amount, 2)
         self._get_balance(user_id)  # ensure user exists
-        with self._db as conn:
-            conn.execute(
+        with BankDB() as cur:
+            cur.execute(
                 'UPDATE BANK SET balance = balance + ? WHERE user_id = ?',
                 (amount, user_id)
             )
 
     def _insert_user(self, user_id: int):
-        with self._db as conn:
-            conn.execute(
+        with BankDB() as cur:
+            cur.execute(
                 'INSERT INTO BANK (user_id, balance) VALUES (?, ?)',
                 (user_id, STARTING_BALANCE)
             )
         logger.info(f'Inserted user {user_id}')
-
-    def cog_unload(self):
-        self._db.close()
-        logger.info('Closed connection')
 
 
 def setup(bot: commands.Bot):
