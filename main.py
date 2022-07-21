@@ -15,7 +15,7 @@ logger = logging.getLogger('main')
 
 def main():
     logger.info('Starting bot')
-    bot = commands.Bot()
+    bot = commands.InteractionBot()
 
     logger.info('Loading extensions')
     for cog in cog_names:

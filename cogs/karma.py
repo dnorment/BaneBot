@@ -9,8 +9,6 @@ from disnake import (ApplicationCommandInteraction, Color, Embed,
 from disnake.errors import NotFound
 from disnake.ext import commands
 
-from cogs.bank import Bank
-
 logger = logging.getLogger('cogs.karma')
 
 
@@ -116,7 +114,6 @@ class Karma(commands.Cog):
         if not channel or isinstance(channel, disnake.abc.PrivateChannel):
             return
         message = await channel.fetch_message(payload.message_id)
-        guild = channel.guild
 
         # skip messages older than 24h
         now_timestamp = datetime.datetime.now().timestamp()
@@ -158,16 +155,6 @@ class Karma(commands.Cog):
              '$set': {'name': f'{message.author.name}#{message.author.discriminator}'}},
             upsert=True
         )
-
-        # reflect changes in bank
-        bank: Bank = self.bot.get_cog('Bank')
-        if bank:
-            REWARD_AMT = 10
-            PENALTY_AMT = 5
-            if vote_direction == 1:
-                bank.add(message.author.id, REWARD_AMT)
-            else:
-                bank.sub(message.author.id, PENALTY_AMT)
 
         # get name for logging
         user = self.bot.get_user(payload.user_id)
