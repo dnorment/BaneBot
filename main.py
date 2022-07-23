@@ -15,7 +15,7 @@ logger = logging.getLogger('main')
 
 def main():
     logger.info('Starting bot')
-    bot = commands.InteractionBot()
+    bot = commands.InteractionBot(test_guilds=settings.GUILD_IDS)
 
     logger.info('Loading extensions')
     for cog in cog_names:

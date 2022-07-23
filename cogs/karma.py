@@ -27,13 +27,13 @@ class Karma(commands.Cog):
     async def on_raw_reaction_remove(self, payload: RawReactionActionEvent):
         await self.handle_reaction_event(payload)
 
-    @commands.slash_command(guild_ids=settings.GUILD_IDS)
+    @commands.slash_command()
     async def karma(self, inter: ApplicationCommandInteraction):
         pass
 
     @karma.sub_command(description='Shows leaderboard')
-    async def leaderboard(self, ctx: ApplicationCommandInteraction):
-        karma_list = await self.get_leaderboard_docs(ctx.guild_id)
+    async def leaderboard(self, inter: ApplicationCommandInteraction):
+        karma_list = await self.get_leaderboard_docs(inter.guild_id)
 
         if karma_list:
             desc = ''
@@ -50,47 +50,47 @@ class Karma(commands.Cog):
                         user_name = f'{user.name}#{user.discriminator}'
                         # add name to document
                         self._karma.find_one_and_update(
-                            {'guild': str(ctx.guild_id),
+                            {'guild': str(inter.guild_id),
                              'user': str(user.id)},
                             {'$set': {'name': user_name}}
                         )
                         logger.info(
-                            f'{ctx.guild.name}: Added {user_name}\'s name to their document')
+                            f'{inter.guild.name}: Added {user_name}\'s name to their document')
                     except NotFound:
                         logger.warn(
-                            f'{ctx.guild.name}: User {user_id} not found in guild, deleting their document')
-                        await self.remove_user(user_id, ctx.guild.id)
+                            f'{inter.guild.name}: User {user_id} not found in guild, deleting their document')
+                        await self.remove_user(user_id, inter.guild.id)
                         continue
 
                 icon = ['🥇', '🥈', '🥉', '🐝']
                 desc += f'`{i + 1:02d}.` {icon[min(i, 3)]} `{user_doc["karma"]:5d}` ' \
                         f'{user_name}\n'
 
-            await ctx.send(
+            await inter.send(
                 embed=Embed(
-                    title=f'Top karma for {ctx.guild.name}',
+                    title=f'Top karma for {inter.guild.name}',
                     description=desc,
                     color=Color.green()
-                ).set_thumbnail(url=ctx.guild.icon.url)
+                ).set_thumbnail(url=inter.guild.icon.url)
             )
 
         logger.info(
-            f'{ctx.guild.name}: Showing leaderboard to {ctx.author.name}#{ctx.author.discriminator}')
+            f'{inter.guild.name}: Showing leaderboard to {inter.author.name}#{inter.author.discriminator}')
 
-    @commands.user_command(name='Get karma', guild_ids=settings.GUILD_IDS)
-    async def get_user_karma(self, ctx: ApplicationCommandInteraction, user: User) -> int:
+    @commands.user_command(name='Get karma')
+    async def get_user_karma(self, inter: ApplicationCommandInteraction, user: User) -> int:
         # don't get bot karma
         if user == self.bot.user or user.bot:
-            await ctx.send(embed=Embed(
+            await inter.send(embed=Embed(
                 title='The fire rises.',
                 color=Color.red()
             ).set_thumbnail(url=self.bot.user.display_avatar.url), ephemeral=True)
             logger.info(
-                f'{ctx.guild.name}: {ctx.author.name}#{ctx.author.discriminator} reacted to a bot, ignoring')
+                f'{inter.guild.name}: {inter.author.name}#{inter.author.discriminator} reacted to a bot, ignoring')
             return
 
         user_doc = self._karma.find_one({
-            'guild': str(ctx.guild_id),
+            'guild': str(inter.guild_id),
             'user': str(user.id)
         })
 
@@ -99,13 +99,13 @@ class Karma(commands.Cog):
         except (AttributeError, KeyError, TypeError):
             karma = 0
 
-        await ctx.send(embed=Embed(
+        await inter.send(embed=Embed(
             title=f'{user.name}#{user.discriminator}',
             color=Color.green()
         ).add_field(name='Karma', value=karma).set_thumbnail(url=user.display_avatar.url))
 
         logger.info(
-            f'{ctx.guild.name}: {ctx.author.name}#{ctx.author.discriminator} got {user.name}#{user.discriminator}\'s karma')
+            f'{inter.guild.name}: {inter.author.name}#{inter.author.discriminator} got {user.name}#{user.discriminator}\'s karma')
 
     async def handle_reaction_event(self, payload: RawReactionActionEvent):
         channel = self.bot.get_channel(payload.channel_id)
