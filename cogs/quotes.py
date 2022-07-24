@@ -6,6 +6,7 @@ import random
 from disnake import (FFmpegPCMAudio, PCMVolumeTransformer, VoiceChannel,
                      VoiceClient)
 from disnake.ext import commands, tasks
+from mutagen.mp3 import MP3
 
 logger = logging.getLogger('cogs.quotes')
 
@@ -53,9 +54,12 @@ class Quotes(commands.Cog):
     async def _play_random_quote(self):
         chosen_name = random.choice(
             [f'./resources/quotes/{name}' for name in os.listdir('./resources/quotes/')])
+
         source = PCMVolumeTransformer(FFmpegPCMAudio(chosen_name))
         self.voice_client.play(source=source)
-        await asyncio.sleep(4)
+
+        audio_length = MP3(chosen_name).info.length
+        await asyncio.sleep(audio_length + 0.1)
 
 
 def setup(bot: commands.Bot):
