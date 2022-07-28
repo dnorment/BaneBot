@@ -43,7 +43,7 @@ class Quotes(commands.Cog):
 
         await self.voice_client.disconnect()
 
-        self.say_quote.change_interval(minutes=random.choice(range(45, 75)))
+        self.say_quote.change_interval(minutes=random.choice(range(85, 105)))
 
     async def _join_channel(self, channel: VoiceChannel):
         if self.voice_client and self.voice_client.is_connected():
