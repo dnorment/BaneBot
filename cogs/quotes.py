@@ -18,7 +18,7 @@ class Quotes(commands.Cog):
         self.say_quote.start()
         logger.info('Initialized cog')
 
-    @tasks.loop(minutes=120)
+    @tasks.loop(minutes=360)
     async def say_quote(self):
         logger.info('Running quote loop')
         if self.voice_client and self.voice_client.is_playing():
@@ -43,7 +43,7 @@ class Quotes(commands.Cog):
 
         await self.voice_client.disconnect()
 
-        self.say_quote.change_interval(minutes=random.choice(range(120, 240)))
+        self.say_quote.change_interval(minutes=random.choice(range(360, 960)))
 
     async def _join_channel(self, channel: VoiceChannel):
         if self.voice_client and self.voice_client.is_connected():
