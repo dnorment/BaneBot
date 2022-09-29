@@ -8,3 +8,7 @@ GUILD_IDS = None
 
 # MongoDB URI
 MONGO_URI = ''
+
+# Spotify credentials
+SPOTIFY_CLIENT_ID = ''
+SPOTIFY_CLIENT_SECRET = ''

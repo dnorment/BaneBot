@@ -2,3 +2,4 @@ disnake
 pymongo
 dnspython
 mutagen
+youtube_dl

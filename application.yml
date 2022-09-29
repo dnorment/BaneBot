@@ -1,0 +1,27 @@
+# Application configuration for Lavalink audio server
+
+server:
+  port: 2012
+  address: 0.0.0.0
+
+lavalink:
+  server:
+    password: 'thefirerises'
+    sources:
+      youtube: true
+      soundcloud: true
+
+    bufferDurationMs: 400  # The duration of the NAS buffer. Higher values fare better against longer GC pauses
+    frameBufferDurationMs: 5000  # How many milliseconds of audio to keep buffered
+    gc-warnings: true
+    playerUpdateInterval: 5  # How frequently to send player updates to clients, in seconds
+
+    soundcloudSearchEnabled: true
+
+    youtubePlaylistLoadLimit: 6  # Number of pages at 100 each
+    youtubeSearchEnabled: true
+
+logging:
+  level:
+    root: error
+    lavalink: error
