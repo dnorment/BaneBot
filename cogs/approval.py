@@ -1,9 +1,9 @@
 import logging
-from datetime import datetime, timedelta
 
 import settings
 from disnake import RawReactionActionEvent
-from disnake.ext import commands
+from disnake.ext import commands, tasks
+from util.misc import message_older_than_24h
 
 logger = logging.getLogger('cogs.approval')
 
@@ -11,22 +11,22 @@ logger = logging.getLogger('cogs.approval')
 class Approval(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.approved = []
+        self.approved_messages = []
+        self.prune_old_messages_task.start()
         logger.info('Initialized cog')
+
+    @tasks.loop(hours=1)
+    async def prune_old_messages_task(self):
+        for message in self.approved_messages:
+            if message_older_than_24h(message):
+                self.approved_messages.remove(message)
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
         channel = await self.bot.fetch_channel(payload.channel_id)
         message = await channel.fetch_message(payload.message_id)
 
-        if message in self.approved:
-            return
-
-        # Skip messages older than 24h
-        now_timestamp = datetime.now().timestamp()
-        seconds_in_24h = timedelta(days=1).total_seconds()
-        timestamp_24h_ago = now_timestamp - seconds_in_24h
-        if timestamp_24h_ago >= message.created_at.timestamp():
+        if message_older_than_24h(message) or message in self.approved_messages:
             return
 
         approving_reactions = [r for r in message.reactions if r.emoji == '👍']
@@ -38,7 +38,7 @@ class Approval(commands.Cog):
             reactors = await reaction.users().flatten()
 
             if all(id in [r.id for r in reactors] for id in member_ids):
-                self.approved.append(message)
+                self.approved_messages.append(message)
                 await message.reply(f'Approved by {group}')
                 logger.info(f'{group} approved message {message.id}')
 

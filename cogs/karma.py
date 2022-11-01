@@ -1,4 +1,3 @@
-import datetime
 import logging
 
 import disnake
@@ -8,6 +7,7 @@ from disnake import (ApplicationCommandInteraction, Color, Embed,
                      RawReactionActionEvent, User)
 from disnake.errors import NotFound
 from disnake.ext import commands
+from util.misc import message_older_than_24h
 
 logger = logging.getLogger('cogs.karma')
 
@@ -116,10 +116,7 @@ class Karma(commands.Cog):
         message = await channel.fetch_message(payload.message_id)
 
         # skip messages older than 24h
-        now_timestamp = datetime.datetime.now().timestamp()
-        seconds_in_24h = datetime.timedelta(days=1).total_seconds()
-        timestamp_24h_ago = now_timestamp - seconds_in_24h
-        if timestamp_24h_ago >= message.created_at.timestamp():
+        if message_older_than_24h(message):
             return
 
         # skip ignored users
