@@ -17,9 +17,12 @@ def main():
     logger.info('Starting bot')
     bot = commands.InteractionBot(test_guilds=settings.GUILD_IDS)
 
-    logger.info('Loading extensions')
+    logger.info(f'Loading extensions ({len(cog_names)})')
     for cog in cog_names:
-        bot.load_extension(f'cogs.{cog}')
+        try:
+            bot.load_extension(f'cogs.{cog}')
+        except commands.errors.ExtensionNotFound as e:
+            logger.error(e)
 
     bot.run(settings.BOT_TOKEN)
 
