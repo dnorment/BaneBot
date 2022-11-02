@@ -1,6 +1,7 @@
 import logging
 
 from disnake.ext import commands
+from disnake.ext.commands.errors import ExtensionNotFound
 
 import settings
 from cogs import cog_names
@@ -21,7 +22,7 @@ def main():
     for cog in cog_names:
         try:
             bot.load_extension(f'cogs.{cog}')
-        except commands.errors.ExtensionNotFound as e:
+        except ExtensionNotFound | AttributeError as e:
             logger.error(e)
 
     bot.run(settings.BOT_TOKEN)

@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import os
 import random
 
@@ -7,24 +6,22 @@ from disnake import (FFmpegPCMAudio, PCMVolumeTransformer, VoiceChannel,
                      VoiceClient)
 from disnake.ext import commands, tasks
 from mutagen.mp3 import MP3
+from util.bane import BaneCog
 
-logger = logging.getLogger('cogs.quotes')
 
-
-class Quotes(commands.Cog):
+class Quotes(BaneCog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.voice_client: VoiceClient = None
         self.say_quote.start()
-        logger.info('Initialized cog')
 
     @tasks.loop(minutes=360)
     async def say_quote(self):
-        logger.info('Running quote loop')
+        self.logger.info('Running quote loop')
         if self.voice_client and self.voice_client.is_playing():
             return
 
-        vc_with_users = []
+        vc_with_users: list[VoiceChannel] = []
         for guild in await self.bot.fetch_guilds().flatten():
             resolved_guild = self.bot.get_guild(guild.id)
             if not resolved_guild:
@@ -39,6 +36,7 @@ class Quotes(commands.Cog):
         chosen_channel = random.choice(vc_with_users)
         await self._join_channel(chosen_channel)
 
+        self.logger.info(f'Playing quote in voice channel {chosen_channel.name}')
         await self._play_random_quote()
 
         await self.voice_client.disconnect()
@@ -59,7 +57,7 @@ class Quotes(commands.Cog):
         self.voice_client.play(source=source)
 
         audio_length = MP3(chosen_name).info.length
-        await asyncio.sleep(audio_length + 0.3)
+        await asyncio.sleep(audio_length + 0.4)
 
 
 def setup(bot: commands.Bot):

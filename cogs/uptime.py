@@ -1,17 +1,14 @@
-import logging
 from datetime import datetime
 
 from disnake import ApplicationCommandInteraction, Color, Embed
 from disnake.ext import commands
+from util.bane import BaneCog
 
-logger = logging.getLogger('cogs.uptime')
 
-
-class Uptime(commands.Cog):
+class Uptime(BaneCog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.start_time = datetime.now()
-        logger.info('Initialized cog')
 
     @commands.slash_command(description='Shows bot uptime')
     async def uptime(self, inter: ApplicationCommandInteraction):
@@ -28,7 +25,7 @@ class Uptime(commands.Cog):
             color=Color.green()
         ))
 
-        logger.info(f'{inter.guild.name}: Uptime: {uptime_str}')
+        self.logger.info(f'{inter.guild.name}: Uptime: {uptime_str}')
 
 
 def setup(bot: commands.Bot):
