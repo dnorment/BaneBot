@@ -1,19 +1,15 @@
-import logging
-
 import settings
 from disnake import RawReactionActionEvent
 from disnake.ext import commands, tasks
+from util.bane import BaneCog
 from util.misc import message_older_than_24h
 
-logger = logging.getLogger('cogs.approval')
 
-
-class Approval(commands.Cog):
+class Approval(BaneCog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.approved_messages = []
         self.prune_old_messages_task.start()
-        logger.info('Initialized cog')
 
     @tasks.loop(hours=1)
     async def prune_old_messages_task(self):
@@ -40,7 +36,7 @@ class Approval(commands.Cog):
             if all(id in [r.id for r in reactors] for id in member_ids):
                 self.approved_messages.append(message)
                 await message.reply(f'Approved by {group}')
-                logger.info(f'{group} approved message {message.id}')
+                self.logger.info(f'{group} approved message {message.id}')
 
 
 def setup(bot: commands.Bot):

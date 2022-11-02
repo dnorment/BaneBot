@@ -1,5 +1,3 @@
-import logging
-
 import disnake
 import pymongo
 import settings
@@ -7,17 +5,15 @@ from disnake import (ApplicationCommandInteraction, Color, Embed,
                      RawReactionActionEvent, User)
 from disnake.errors import NotFound
 from disnake.ext import commands
+from util.bane import BaneCog
 from util.misc import message_older_than_24h
 
-logger = logging.getLogger('cogs.karma')
 
-
-class Karma(commands.Cog):
+class Karma(BaneCog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self._db = pymongo.MongoClient(settings.MONGO_URI)['banebot']
         self._karma = self._db['karma']
-        logger.info('Initialized cog')
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
@@ -54,10 +50,10 @@ class Karma(commands.Cog):
                              'user': str(user.id)},
                             {'$set': {'name': user_name}}
                         )
-                        logger.info(
+                        self.logger.info(
                             f'{inter.guild.name}: Added {user_name}\'s name to their document')
                     except NotFound:
-                        logger.warn(
+                        self.logger.warn(
                             f'{inter.guild.name}: User {user_id} not found in guild, deleting their document')
                         await self.remove_user(user_id, inter.guild.id)
                         continue
@@ -74,7 +70,7 @@ class Karma(commands.Cog):
                 ).set_thumbnail(url=inter.guild.icon.url)
             )
 
-        logger.info(
+        self.logger.info(
             f'{inter.guild.name}: Showing leaderboard to {inter.author.name}#{inter.author.discriminator}')
 
     @commands.user_command(name='Get karma')
@@ -85,7 +81,7 @@ class Karma(commands.Cog):
                 title='The fire rises.',
                 color=Color.red()
             ).set_thumbnail(url=self.bot.user.display_avatar.url), ephemeral=True)
-            logger.info(
+            self.logger.info(
                 f'{inter.guild.name}: {inter.author.name}#{inter.author.discriminator} reacted to a bot, ignoring')
             return
 
@@ -104,7 +100,7 @@ class Karma(commands.Cog):
             color=Color.green()
         ).add_field(name='Karma', value=karma).set_thumbnail(url=user.display_avatar.url))
 
-        logger.info(
+        self.logger.info(
             f'{inter.guild.name}: {inter.author.name}#{inter.author.discriminator} got {user.name}#{user.discriminator}\'s karma')
 
     async def handle_reaction_event(self, payload: RawReactionActionEvent):
@@ -158,7 +154,7 @@ class Karma(commands.Cog):
         if not user:
             user = await self.bot.fetch_user(payload.user_id)
 
-        logger.info(
+        self.logger.info(
             f'{message.guild.name}: {user.name}#{user.discriminator} - {voted} - {message.author.name}#{message.author.discriminator}')
 
     async def is_ignored_user(self, user_id: int, guild_id: int) -> bool:
@@ -184,7 +180,7 @@ class Karma(commands.Cog):
 
         guild = self.bot.get_guild(guild_id)
 
-        logger.info(f'{guild.name}: Toggled ignore of {user_id}')
+        self.logger.info(f'{guild.name}: Toggled ignore of {user_id}')
 
     async def remove_user(self, user_id: int, guild_id: int):
         self._karma.remove({
@@ -194,7 +190,7 @@ class Karma(commands.Cog):
 
         guild = self.bot.get_guild(guild_id)
 
-        logger.info(f'{guild.name}: Removed user {user_id} from collection')
+        self.logger.info(f'{guild.name}: Removed user {user_id} from collection')
 
     async def get_leaderboard_docs(self, guild_id: int) -> list:
         karma_docs = self._karma.find({'guild': str(guild_id)})
