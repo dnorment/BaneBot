@@ -1,4 +1,4 @@
-disnake==2.6.0
+disnake==2.9.0
 pymongo
 pynacl
 dnspython

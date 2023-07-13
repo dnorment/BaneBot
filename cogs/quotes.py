@@ -41,7 +41,7 @@ class Quotes(BaneCog):
 
         await self.voice_client.disconnect()
 
-        self.say_quote.change_interval(minutes=random.choice(range(360, 960)))
+        self.say_quote.change_interval(minutes=random.randint(360, 960))
 
     async def _join_channel(self, channel: VoiceChannel):
         if self.voice_client and self.voice_client.is_connected():
