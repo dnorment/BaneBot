@@ -1,24 +1,18 @@
-import logging
 import re
 import time
 
 import feedparser
 import pymongo
-import settings
 from disnake import (ApplicationCommandInteraction, ButtonStyle, Embed, Guild,
                      MessageInteraction, TextChannel)
 from disnake.ext import commands, tasks
 from disnake.ui import Button, View, button
 
-logger = logging.getLogger('cogs.manga')
+import settings
+from util.bane import BaneCog
 
 
 class SubscribeButtonView(View):
-    def __init__(self):
-        super().__init__()
-
-        self.subscribed = False
-
     @button(emoji='📰', style=ButtonStyle.grey, custom_id='subscribe', label='Subscribe')
     async def subscribe_button(self, button: Button, inter: MessageInteraction):
         self.subscribe_button.disabled = True
@@ -28,13 +22,12 @@ class SubscribeButtonView(View):
         await inter.response.edit_message(view=self)
 
 
-class Manga(commands.Cog):
+class Manga(BaneCog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self._db = pymongo.MongoClient(settings.MONGO_URI)['banebot']
         self._mangadb = self._db['manga']
         self.check_series_updates.start()
-        logger.info('Initialized cog')
 
     def _set_notification_channel(self, guild: Guild, channel: TextChannel):
         self._mangadb.find_one_and_update(
@@ -42,7 +35,7 @@ class Manga(commands.Cog):
             {'$set': {'channel': channel.id}},
             upsert=True
         )
-        logger.info(
+        self.logger.info(
             f'Set {guild.name} manga notifications to channel #{channel.name}')
 
     def _get_notification_channel(self, guild: Guild) -> TextChannel:
@@ -64,7 +57,7 @@ class Manga(commands.Cog):
             if not channel:
                 continue
 
-        logger.info('Running update loop')
+        self.logger.info('Running update loop')
 
     @commands.slash_command()
     async def manga(self, inter: ApplicationCommandInteraction):
