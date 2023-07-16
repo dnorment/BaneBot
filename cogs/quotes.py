@@ -2,11 +2,11 @@ import asyncio
 import os
 import random
 
-from disnake import (FFmpegPCMAudio, PCMVolumeTransformer, VoiceChannel,
-                     VoiceClient)
+from disnake import FFmpegPCMAudio, PCMVolumeTransformer, VoiceChannel, VoiceClient
 from disnake.ext import commands, tasks
 from mutagen.mp3 import MP3
-from util.bane import BaneCog
+
+from cogs import BaneCog
 
 
 class Quotes(BaneCog):
