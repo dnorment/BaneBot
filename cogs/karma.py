@@ -1,18 +1,15 @@
-import pymongo
 from disnake import ApplicationCommandInteraction, Color, Embed, RawReactionActionEvent, User
 from disnake.abc import PrivateChannel
 from disnake.errors import NotFound
 from disnake.ext import commands
 
-import settings
 from cogs import BaneCog
 
 
 class Karma(BaneCog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self._db = pymongo.MongoClient(settings.MONGO_URI)['banebot']
-        self._karma = self._db['karma']
+        self.karma_db = self.db['karma']
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: RawReactionActionEvent):
@@ -45,7 +42,7 @@ class Karma(BaneCog):
                 try:
                     user = await self.bot.fetch_user(user_id)
                     # add name to document
-                    self._karma.find_one_and_update(
+                    self.karma_db.find_one_and_update(
                         {'guild': str(inter.guild_id),
                          'user': str(user.id)},
                         {'$set': {'name': user.name}}
@@ -80,7 +77,7 @@ class Karma(BaneCog):
             self.logger.info(f'{inter.guild.name}: {inter.author.name} reacted to a bot, ignoring')
             return
 
-        user_doc = self._karma.find_one({
+        user_doc = self.karma_db.find_one({
             'guild': str(inter.guild_id),
             'user': str(user.id)
         })
@@ -125,7 +122,7 @@ class Karma(BaneCog):
             vote_action_str = f'remove {vote}'
 
         # Update author's karma
-        self._karma.find_one_and_update(
+        self.karma_db.find_one_and_update(
             {'guild': str(payload.guild_id),
              'user': str(message.author.id)},
             {'$inc': {'karma': vote_value},
@@ -141,7 +138,7 @@ class Karma(BaneCog):
         self.logger.info(f'{message.guild.name}: {user.name} - {vote_action_str} - {message.author.name}')
 
     async def is_ignored_user(self, user_id: int, guild_id: int) -> bool:
-        user_doc = self._karma.find_one({
+        user_doc = self.karma_db.find_one({
             'guild': str(guild_id),
             'user': str(user_id)
         })
@@ -154,7 +151,7 @@ class Karma(BaneCog):
     async def toggle_ignore_user(self, user_id: int, guild_id: int):
         ignored = self.is_ignored_user(user_id, guild_id)
 
-        self._karma.find_one_and_update(
+        self.karma_db.find_one_and_update(
             {'guild': str(guild_id),
              'user': str(user_id)},
             {'$set': {'ignored': not ignored}},
@@ -166,7 +163,7 @@ class Karma(BaneCog):
         self.logger.info(f'{guild.name}: Toggled ignore of {user_id}')
 
     async def remove_user(self, user_id: int, guild_id: int):
-        self._karma.remove({
+        self.karma_db.remove({
             'guild': str(guild_id),
             'user': str(user_id)
         })
@@ -176,9 +173,5 @@ class Karma(BaneCog):
         self.logger.info(f'{guild.name}: Removed user {user_id} from collection')
 
     async def get_leaderboard_docs(self, guild_id: int) -> list:
-        karma_docs = self._karma.find({'guild': str(guild_id)})
+        karma_docs = self.karma_db.find({'guild': str(guild_id)})
         return sorted(karma_docs, key=lambda item: item['karma'], reverse=True)
-
-
-def setup(bot: commands.Bot):
-    bot.add_cog(Karma(bot))

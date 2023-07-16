@@ -1,10 +1,9 @@
 import logging
 
 from disnake.ext import commands
-from disnake.ext.commands.errors import ExtensionNotFound
 
 import settings
-from cogs import cog_names
+from cogs import cogs
 
 logging.getLogger('disnake.gateway').setLevel(logging.WARN)
 logging.basicConfig(
@@ -20,12 +19,8 @@ def main():
     logger.info('Starting bot')
     bot = commands.InteractionBot(test_guilds=settings.GUILD_IDS)
 
-    logger.info(f'Loading extensions ({len(cog_names)})')
-    for cog in cog_names:
-        try:
-            bot.load_extension(f'cogs.{cog}')
-        except ExtensionNotFound | AttributeError as e:
-            logger.error(e)
+    for cog in cogs:
+        bot.add_cog(cog(bot))
 
     bot.run(settings.BOT_TOKEN)
 

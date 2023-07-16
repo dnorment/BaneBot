@@ -58,7 +58,3 @@ class Quotes(BaneCog):
 
         audio_length = MP3(chosen_name).info.length
         await asyncio.sleep(audio_length + 0.4)
-
-
-def setup(bot: commands.Bot):
-    bot.add_cog(Quotes(bot))

@@ -27,7 +27,3 @@ class Uptime(BaneCog):
         ))
 
         self.logger.info(f'{inter.guild.name}: Uptime: {uptime_str}')
-
-
-def setup(bot: commands.Bot):
-    bot.add_cog(Uptime(bot))
