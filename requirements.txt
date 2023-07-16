@@ -3,3 +3,4 @@ pymongo
 pynacl
 dnspython
 mutagen
+ruff
