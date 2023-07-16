@@ -3,13 +3,12 @@ import time
 
 import feedparser
 import pymongo
-from disnake import (ApplicationCommandInteraction, ButtonStyle, Embed, Guild,
-                     MessageInteraction, TextChannel)
+from disnake import ApplicationCommandInteraction, ButtonStyle, Embed, Guild, MessageInteraction, TextChannel
 from disnake.ext import commands, tasks
 from disnake.ui import Button, View, button
 
 import settings
-from util.bane import BaneCog
+from cogs import BaneCog
 
 
 class SubscribeButtonView(View):
