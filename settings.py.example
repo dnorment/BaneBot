@@ -8,6 +8,3 @@ GUILD_IDS = None
 
 # MongoDB URI
 MONGO_URI = ''
-
-# Approval map, keys are the name of the group and values are lists of client IDs
-APPROVAL_MAP = {}

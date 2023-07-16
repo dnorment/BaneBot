@@ -2,7 +2,8 @@ from datetime import datetime
 
 from disnake import ApplicationCommandInteraction, Color, Embed
 from disnake.ext import commands
-from util.bane import BaneCog
+
+from cogs import BaneCog
 
 
 class Uptime(BaneCog):

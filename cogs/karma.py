@@ -1,12 +1,11 @@
-import disnake
 import pymongo
-import settings
-from disnake import (ApplicationCommandInteraction, Color, Embed,
-                     RawReactionActionEvent, User)
+from disnake import ApplicationCommandInteraction, Color, Embed, RawReactionActionEvent, User
+from disnake.abc import PrivateChannel
 from disnake.errors import NotFound
 from disnake.ext import commands
-from util.bane import BaneCog
-from util.misc import message_older_than_24h
+
+import settings
+from cogs import BaneCog
 
 
 class Karma(BaneCog):
@@ -31,58 +30,54 @@ class Karma(BaneCog):
     async def leaderboard(self, inter: ApplicationCommandInteraction):
         karma_list = await self.get_leaderboard_docs(inter.guild_id)
 
-        if karma_list:
-            desc = ''
-            for i, user_doc in enumerate(karma_list):
-                user_id = user_doc['user']
+        if not karma_list:
+            return
 
-                # use user's name, if not found then update name
+        leaderboard_lines = []
+        for i, user_doc in enumerate(karma_list):
+            user_id = user_doc['user']
+
+            # Use user's name, if not found then update name
+            try:
+                user = self.bot.get_user(user_id)
+                user_name = user_doc['name']
+            except (AttributeError, KeyError, TypeError):
                 try:
-                    user = self.bot.get_user(user_id)
-                    user_name = user_doc['name']
-                except (AttributeError, KeyError, TypeError):
-                    try:
-                        user = await self.bot.fetch_user(user_id)
-                        user_name = f'{user.name}#{user.discriminator}'
-                        # add name to document
-                        self._karma.find_one_and_update(
-                            {'guild': str(inter.guild_id),
-                             'user': str(user.id)},
-                            {'$set': {'name': user_name}}
-                        )
-                        self.logger.info(
-                            f'{inter.guild.name}: Added {user_name}\'s name to their document')
-                    except NotFound:
-                        self.logger.warn(
-                            f'{inter.guild.name}: User {user_id} not found in guild, deleting their document')
-                        await self.remove_user(user_id, inter.guild.id)
-                        continue
+                    user = await self.bot.fetch_user(user_id)
+                    # add name to document
+                    self._karma.find_one_and_update(
+                        {'guild': str(inter.guild_id),
+                         'user': str(user.id)},
+                        {'$set': {'name': user.name}}
+                    )
+                    self.logger.info(f'{inter.guild.name}: Added {user.name}\'s name to their document')
+                except NotFound:
+                    self.logger.warn(f'{inter.guild.name}: User {user_id} not found in guild, deleting their document')
+                    await self.remove_user(user_id, inter.guild.id)
+                    continue
 
-                icon = ['🥇', '🥈', '🥉', '🐝']
-                desc += f'`{i + 1:02d}.` {icon[min(i, 3)]} `{user_doc["karma"]:5d}` ' \
-                        f'{user_name}\n'
+            icon = {0: '🥇', 1: '🥈', 2: '🥉'}.get(i, '🐝')
+            leaderboard_lines.append(f'`{i + 1:02d}.` {icon} `{user_doc["karma"]:5d}` {user_name}')
 
-            await inter.send(
-                embed=Embed(
-                    title=f'Top karma for {inter.guild.name}',
-                    description=desc,
-                    color=Color.green()
-                ).set_thumbnail(url=inter.guild.icon.url)
-            )
+        await inter.send(
+            embed=Embed(
+                title=f'Top karma for {inter.guild.name}',
+                description='\n'.join(leaderboard_lines),
+                color=Color.green()
+            ).set_thumbnail(url=inter.guild.icon.url)
+        )
 
-        self.logger.info(
-            f'{inter.guild.name}: Showing leaderboard to {inter.author.name}#{inter.author.discriminator}')
+        self.logger.info(f'{inter.guild.name}: Showing leaderboard to {inter.author.name}')
 
     @commands.user_command(name='Get karma')
-    async def get_user_karma(self, inter: ApplicationCommandInteraction, user: User) -> int:
-        # don't get bot karma
+    async def get_user_karma(self, inter: ApplicationCommandInteraction, user: User):
+        # Don't get bot karma
         if user == self.bot.user or user.bot:
             await inter.send(embed=Embed(
                 title='The fire rises.',
                 color=Color.red()
             ).set_thumbnail(url=self.bot.user.display_avatar.url), ephemeral=True)
-            self.logger.info(
-                f'{inter.guild.name}: {inter.author.name}#{inter.author.discriminator} reacted to a bot, ignoring')
+            self.logger.info(f'{inter.guild.name}: {inter.author.name} reacted to a bot, ignoring')
             return
 
         user_doc = self._karma.find_one({
@@ -96,66 +91,54 @@ class Karma(BaneCog):
             karma = 0
 
         await inter.send(embed=Embed(
-            title=f'{user.name}#{user.discriminator}',
+            title=user.name,
             color=Color.green()
         ).add_field(name='Karma', value=karma).set_thumbnail(url=user.display_avatar.url))
 
-        self.logger.info(
-            f'{inter.guild.name}: {inter.author.name}#{inter.author.discriminator} got {user.name}#{user.discriminator}\'s karma')
+        self.logger.info(f'{inter.guild.name}: {inter.author.name} got {user.name}\'s karma')
 
     async def handle_reaction_event(self, payload: RawReactionActionEvent):
         channel = self.bot.get_channel(payload.channel_id)
 
-        # only handle in a guild
-        if not channel or isinstance(channel, disnake.abc.PrivateChannel):
+        # Only handle reaction events in a guild
+        if not channel or isinstance(channel, PrivateChannel):
             return
+
         message = await channel.fetch_message(payload.message_id)
-
-        # skip messages older than 24h
-        if message_older_than_24h(message):
-            return
-
-        # skip ignored users
-        if await self.is_ignored_user(payload.user_id, payload.guild_id):
-            return
-
-        # skip voting on all bots
-        if message.author.bot:
-            return
-
-        # skip users reacting to themselves
-        if payload.user_id == message.author.id:
-            return
-
-        # get upvote/downvote
         vote = payload.emoji.name
-        if vote not in ['upvote', 'downvote']:
+
+        if any(
+            self.message_older_than_24h(message),  # Skip messages older than 24h
+            await self.is_ignored_user(payload.user_id, payload.guild_id),  # Skip users that should have their actions ignored
+            message.author.bot,  # Skip voting on all bots
+            payload.user_id == message.author.id,  # Skip users reacting to themselves
+            vote not in ['upvote', 'downvote'],
+        ):
             return
 
-        vote_direction = 1 if vote == 'upvote' else -1
-        voted = vote
+        vote_value = 1 if vote == 'upvote' else -1
+        vote_action_str = vote
 
-        # flip direction if removing reaction
+        # Change vote value if removing reaction
         if payload.event_type == 'REACTION_REMOVE':
-            vote_direction *= -1
-            voted = f'remove {vote}'
+            vote_value *= -1
+            vote_action_str = f'remove {vote}'
 
-        # update author's karma
+        # Update author's karma
         self._karma.find_one_and_update(
             {'guild': str(payload.guild_id),
              'user': str(message.author.id)},
-            {'$inc': {'karma': vote_direction},
-             '$set': {'name': f'{message.author.name}#{message.author.discriminator}'}},
+            {'$inc': {'karma': vote_value},
+             '$set': {'name': f'{message.author.name}'}},
             upsert=True
         )
 
-        # get name for logging
+        # Get name for logging
         user = self.bot.get_user(payload.user_id)
         if not user:
             user = await self.bot.fetch_user(payload.user_id)
 
-        self.logger.info(
-            f'{message.guild.name}: {user.name}#{user.discriminator} - {voted} - {message.author.name}#{message.author.discriminator}')
+        self.logger.info(f'{message.guild.name}: {user.name} - {vote_action_str} - {message.author.name}')
 
     async def is_ignored_user(self, user_id: int, guild_id: int) -> bool:
         user_doc = self._karma.find_one({
