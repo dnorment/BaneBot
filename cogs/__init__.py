@@ -36,5 +36,4 @@ class BaneCog(commands.Cog):
 
 # Cogs must be defined in `/cogs` or a subfolder's `cog.py` file
 _cog_files = set(os.listdir('./cogs')) - {'__init__.py', '__pycache__'}
-for f in _cog_files:
-    cog_names = {f[:-3] if f.endswith('.py') else f'{f}.cog' for f in _cog_files}
+cog_names = {f[:-3] if f.endswith('.py') else f'{f}.cog' for f in _cog_files}
