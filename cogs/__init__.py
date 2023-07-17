@@ -4,14 +4,16 @@ import os
 from datetime import datetime, timedelta
 
 import pymongo
-from disnake import Message
+from disnake import ApplicationCommandInteraction, Color, Embed, Message
 from disnake.ext import commands
 
 import settings
 
 
 class BaneCog(commands.Cog):
+    bot: commands.InteractionBot
     logger: logging.Logger
+
     db = pymongo.MongoClient(settings.MONGO_URI)['banebot']
 
     async def cog_load(self):
@@ -22,6 +24,27 @@ class BaneCog(commands.Cog):
 
     def cog_unload(self):
         self.logger.info('Unloaded cog')
+
+    async def cog_message_command_error(self, inter: ApplicationCommandInteraction, error: Exception):
+        await self.handle_command_error(inter, error)
+
+    async def cog_slash_command_error(self, inter: ApplicationCommandInteraction, error: Exception):
+        await self.handle_command_error(inter, error)
+
+    async def cog_user_command_error(self, inter: ApplicationCommandInteraction, error: Exception):
+        await self.handle_command_error(inter, error)
+
+    async def handle_command_error(self, inter: ApplicationCommandInteraction, error: Exception):
+        embed = Embed(
+            title='The fire rises.',
+            description=str(error),
+            color=Color.red()
+        ).set_thumbnail(url=self.bot.user.display_avatar.url)
+
+        await inter.send(
+            embed=embed,
+            ephemeral=True
+        )
 
     @staticmethod
     def message_older_than_24h(message: Message) -> bool:

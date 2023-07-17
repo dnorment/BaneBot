@@ -28,7 +28,7 @@ class Karma(BaneCog):
         karma_list = await self.get_leaderboard_docs(inter.guild_id)
 
         if not karma_list:
-            return
+            raise commands.CommandError('No karma records found for this guild')
 
         leaderboard_lines = []
         for i, user_doc in enumerate(karma_list):
@@ -41,7 +41,7 @@ class Karma(BaneCog):
             except (AttributeError, KeyError, TypeError):
                 try:
                     user = await self.bot.fetch_user(user_id)
-                    # add name to document
+                    # Add user's name to document
                     self.karma_db.find_one_and_update(
                         {'guild': str(inter.guild_id),
                          'user': str(user.id)},
@@ -70,12 +70,7 @@ class Karma(BaneCog):
     async def get_user_karma(self, inter: ApplicationCommandInteraction, user: User):
         # Don't get bot karma
         if user == self.bot.user or user.bot:
-            await inter.send(embed=Embed(
-                title='The fire rises.',
-                color=Color.red()
-            ).set_thumbnail(url=self.bot.user.display_avatar.url), ephemeral=True)
-            self.logger.info(f'{inter.guild.name}: {inter.author.name} reacted to a bot, ignoring')
-            return
+            raise commands.CommandError('Bot users are not able to use the karma system')
 
         user_doc = self.karma_db.find_one({
             'guild': str(inter.guild_id),
@@ -104,13 +99,13 @@ class Karma(BaneCog):
         message = await channel.fetch_message(payload.message_id)
         vote = payload.emoji.name
 
-        if any(
+        if any([
             self.message_older_than_24h(message),  # Skip messages older than 24h
             await self.is_ignored_user(payload.user_id, payload.guild_id),  # Skip users that should have their actions ignored
             message.author.bot,  # Skip voting on all bots
             payload.user_id == message.author.id,  # Skip users reacting to themselves
             vote not in ['upvote', 'downvote'],
-        ):
+        ]):
             return
 
         vote_value = 1 if vote == 'upvote' else -1
