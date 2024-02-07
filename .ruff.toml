@@ -1,4 +1,0 @@
-# Maximum line length
-line-length=128
-# Ignore `E501`: line length violations
-ignore = ['E501']

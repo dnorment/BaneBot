@@ -1,6 +1,0 @@
-{
-    "recommendations": [
-        "charliermarsh.ruff",
-        "bungcip.better-toml"
-    ]
-}

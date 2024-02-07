@@ -1,0 +1,9 @@
+version: '3'
+services:
+  banebot:
+    build: .
+    environment:
+      - BOT_ENV=development
+      - DEV_GUILD_ID=1044381783392784514
+      - DISCORD_TOKEN=token
+      - MONGO_URI=mongo_uri

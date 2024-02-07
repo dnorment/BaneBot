@@ -7,14 +7,14 @@ import pymongo
 from disnake import ApplicationCommandInteraction, Color, Embed, Message
 from disnake.ext import commands
 
-import settings
+from config import Config
 
 
 class BaneCog(commands.Cog):
     bot: commands.InteractionBot
     logger: logging.Logger
 
-    db = pymongo.MongoClient(settings.MONGO_URI)['banebot']
+    db = pymongo.MongoClient(Config.mongo_uri)['banebot']
 
     async def cog_load(self):
         cog_name = type(self).__name__.lower()

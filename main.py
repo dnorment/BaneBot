@@ -2,8 +2,8 @@ import logging
 
 from disnake.ext import commands
 
-import settings
 from cogs import cogs
+from config import Config
 
 logging.getLogger('disnake.gateway').setLevel(logging.WARN)
 logging.basicConfig(
@@ -16,13 +16,14 @@ logger = logging.getLogger('main')
 
 
 def main():
-    logger.info('Starting bot')
-    bot = commands.InteractionBot(test_guilds=settings.GUILD_IDS)
+    logger.info(f'Starting bot, env={Config.env}')
+
+    bot = commands.InteractionBot(test_guilds=Config.test_guilds)
 
     for cog in cogs:
         bot.add_cog(cog(bot))
 
-    bot.run(settings.BOT_TOKEN)
+    bot.run(Config.discord_token)
 
 
 if __name__ == "__main__":
